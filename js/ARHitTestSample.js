@@ -21,74 +21,75 @@ var createReactClass = require('create-react-class');
 var ARHitTestSample = createReactClass({
   mixins: [TimerMixin],
 
-  getInitialState: function() {
-    return {
-      objPosition: [0,0,0],
-      scale:[.2, .2, .2],
-      rotation:[0,0,0],
+  getInitialState: () => ({
+      objPosition: [0, 0, 0],
+      scale:[0.2, 0.2, 0.2],
+      rotation:[0, 0, 0],
       shouldBillboard : true,
+  }),
+
+  render: () => (
+    <ViroARScene ref={(node) => { this.arScene = node; }} onTrackingInitialized={this._onTrackInit}>
+        <ViroAmbientLight color="#ffffff" intensity={200}/>
+        {this._getModel()}
+    </ViroARScene>
+  ),
+
+  _createNode: (transformBehaviors) => (
+    <ViroNode
+      {...transformBehaviors}
+      visible={this.props.arSceneNavigator.viroAppProps.displayObject}
+      position={this.state.objPosition}
+      onDrag={() => {}}
+      ref={this._setARNodeRef}
+      scale={this.state.scale}
+      rotation={this.state.rotation}
+      dragType="FixedToWorld" key={this.props.arSceneNavigator.viroAppProps.displayObjectName}
+    >
+      <ViroSpotLight
+        innerAngle={5}
+        outerAngle={20}
+        direction={[0, -1, 0]}
+        position={[0, 4, 0]}
+        color="#ffffff"
+        castsShadow={true}
+        shadowNearZ={0.1}
+        shadowFarZ={6}
+        shadowOpacity={0.9}
+        ref={this._setSpotLightRef}/>
+
+      <Viro3DObject
+        position={[0, this.props.arSceneNavigator.viroAppProps.yOffset, 0]}
+        source={this.props.arSceneNavigator.viroAppProps.objectSource}
+        type = "VRX" onLoadEnd={this._onLoadEnd} onLoadStart={this._onLoadStart}
+        onRotate={this._onRotate}
+        onPinch={this._onPinch} />
+
+      <ViroSurface
+        rotation={[-90, 0, 0]}
+        position={[0, -0.001, 0]}
+        width={2.5} height={2.5}
+        arShadowReceiver={true}
+        ignoreEventHandling={true} />
+    </ViroNode>
+  ),
+
+  _getModel: () => {
+    let modelArray;
+
+    if (
+      this.props.arSceneNavigator.viroAppProps.displayObject &&
+      this.props.arSceneNavigator.viroAppProps.displayObjectName !== undefined
+    ) {
+      let transformBehaviors = {};
+
+      if (this.state.shouldBillboard) {
+        transformBehaviors.transformBehaviors = "billboardY";
+      }
+
+      modelArray = [this._createNode(transformBehaviors)];
     }
-  },
 
-  render: function() {
-    return (
-      <ViroARScene ref="arscene" onTrackingInitialized={this._onTrackInit}>
-          <ViroAmbientLight color="#ffffff" intensity={200}/>
-          {this._getModel()}
-      </ViroARScene>
-    );
-  },
-
-  _getModel() {
-    var modelArray = [];
-    if(!this.props.arSceneNavigator.viroAppProps.displayObject || this.props.arSceneNavigator.viroAppProps.displayObjectName === undefined) {
-      return;
-    }
-
-    let transformBehaviors = {};
-    if (this.state.shouldBillboard) {
-      transformBehaviors.transformBehaviors = this.state.shouldBillboard ? "billboardY" : [];
-    }
-
-     var bitMask = 4;
-      modelArray.push(<ViroNode
-        {...transformBehaviors}
-        visible={this.props.arSceneNavigator.viroAppProps.displayObject}
-        position={this.state.objPosition}
-        onDrag={()=>{}}
-        ref={this._setARNodeRef}
-        scale={this.state.scale}
-        rotation={this.state.rotation}
-        dragType="FixedToWorld" key={this.props.arSceneNavigator.viroAppProps.displayObjectName}>
-
-        <ViroSpotLight
-          innerAngle={5}
-          outerAngle={20}
-          direction={[0,-1,0]}
-          position={[0, 4, 0]}
-          color="#ffffff"
-          castsShadow={true}
-          shadowNearZ={.1}
-          shadowFarZ={6}
-          shadowOpacity={.9}
-          ref={this._setSpotLightRef}/>
-
-        <Viro3DObject
-          position={[0, this.props.arSceneNavigator.viroAppProps.yOffset, 0]}
-          source={this.props.arSceneNavigator.viroAppProps.objectSource}
-          type = "VRX" onLoadEnd={this._onLoadEnd} onLoadStart={this._onLoadStart}
-          onRotate={this._onRotate}
-          onPinch={this._onPinch} />
-
-          <ViroSurface
-            rotation={[-90, 0, 0]}
-            position={[0, -.001, 0]}
-            width={2.5} height={2.5}
-            arShadowReceiver={true}
-            ignoreEventHandling={true} />
-
-      </ViroNode>
-    );
     return modelArray;
   },
 
@@ -109,15 +110,20 @@ var ARHitTestSample = createReactClass({
    Rotation should be relative to its current rotation *not* set to the absolute
    value of the given rotationFactor.
    */
-  _onRotate(rotateState, rotationFactor, source) {
+  _onRotate(rotateState, rotationFactor) {
     if (rotateState == 3) {
       this.setState({
         rotation : [this.state.rotation[0], this.state.rotation[1] + rotationFactor, this.state.rotation[2]]
-      })
-      return;
+      });
+    } else {
+      this.arNodeRef.setNativeProps({
+        rotation:[
+          this.state.rotation[0],
+          this.state.rotation[1] + rotationFactor,
+          this.state.rotation[2]
+        ]
+      });
     }
-
-    this.arNodeRef.setNativeProps({rotation:[this.state.rotation[0], this.state.rotation[1] + rotationFactor, this.state.rotation[2]]});
   },
 
   /*
@@ -126,18 +132,17 @@ var ARHitTestSample = createReactClass({
    and multiply the state by that factor. At the end of a pinch event, set the state
    to the final value and store it in state.
    */
-  _onPinch(pinchState, scaleFactor, source) {
-    var newScale = this.state.scale.map((x)=>{return x * scaleFactor})
+  _onPinch(pinchState, scaleFactor) {
+    var newScale = this.state.scale.map(x => x * scaleFactor);
 
     if (pinchState == 3) {
       this.setState({
         scale : newScale
       });
-      return;
+    } else {
+      this.arNodeRef.setNativeProps({ scale: newScale });
+      this.spotLight.setNativeProps({ shadowFarZ: 6 * newScale[0] });
     }
-
-    this.arNodeRef.setNativeProps({scale:newScale});
-    this.spotLight.setNativeProps({shadowFarZ: 6 * newScale[0]});
   },
 
   _onLoadStart() {
@@ -146,12 +151,13 @@ var ARHitTestSample = createReactClass({
     });
     this.props.arSceneNavigator.viroAppProps._onLoadStart();
   },
+
   // Perform a hit test on load end to display object.
   _onLoadEnd() {
-    this.refs["arscene"].getCameraOrientationAsync().then((orientation) => {
-      this.refs["arscene"].performARHitTestWithRay(orientation.forward).then((results)=>{
+    this.arScene.getCameraOrientationAsync().then((orientation) => {
+      this.arScene.performARHitTestWithRay(orientation.forward).then((results) => {
           this._onArHitTestResults(orientation.position, orientation.forward, results);
-      })
+      });
     });
     this.props.arSceneNavigator.viroAppProps._onLoadEnd();
   },
@@ -162,27 +168,28 @@ var ARHitTestSample = createReactClass({
     let hitResultPosition = undefined;
 
     // Filter the hit test results based on the position.
-    if (results.length > 0) {
-      for (var i = 0; i < results.length; i++) {
-        let result = results[i];
-        if (result.type == "ExistingPlaneUsingExtent") {
-          var distance = Math.sqrt(((result.transform.position[0] - position[0]) * (result.transform.position[0] - position[0])) + ((result.transform.position[1] - position[1]) * (result.transform.position[1] - position[1])) + ((result.transform.position[2] - position[2]) * (result.transform.position[2] - position[2])));
-          if(distance > .2 && distance < 10) {
-            // If we found a plane greater than .2 and less than 10 meters away then choose it!
-            hitResultPosition = result.transform.position;
-            break;
-          }
-        } else if (result.type == "FeaturePoint" && !hitResultPosition) {
-          // If we haven't found a plane and this feature point is within range, then we'll use it
-          // as the initial display point.
-          var distance = this._distance(position, result.transform.position);
-          if (distance > .2  && distance < 10) {
-            hitResultPosition = result.transform.position;
-          }
+    for (let i = 0, hitFound = false; i < results.length && !hitFound; i++) {
+      let result = results[i];
+      
+      if (result.type == "ExistingPlaneUsingExtent") {
+        const distanceToPosition = this._distance(position, result.transform.position);
+        
+        // If we found a plane more than .2 and less than 10 meters away then choose it!
+        if(distanceToPosition > 0.2 && distanceToPosition < 10) {
+          hitResultPosition = result.transform.position;
+          hitFound = true;
+        }
+      } else if (result.type == "FeaturePoint" && !hitResultPosition) {
+        // If we haven't found a plane and this feature point is within range, then we'll use it
+        // as the initial display point.
+        const distanceToPosition = this._distance(position, result.transform.position);
+        if (distanceToPosition > 0.2  && distanceToPosition < 10) {
+          hitResultPosition = result.transform.position;
         }
       }
     }
 
+    //TODO: does this purposely cover falsey values other than its initial value (undefined)?
     if (hitResultPosition) {
       newPosition = hitResultPosition;
     }
@@ -195,34 +202,39 @@ var ARHitTestSample = createReactClass({
     this.setState({
         objPosition: position,
     });
-    this.setTimeout(() =>{this._updateInitialRotation()}, 200);
+    this.setTimeout(this._updateInitialRotation, 200);
   },
 
   // Update the rotation of the object to face the user after it's positioned.
   _updateInitialRotation() {
-    this.arNodeRef.getTransformAsync().then((retDict)=>{
-       let rotation = retDict.rotation;
-       let absX = Math.abs(rotation[0]);
-       let absZ = Math.abs(rotation[2]);
+    this.arNodeRef.getTransformAsync().then((retDict) => {
+       const rotation = retDict.rotation;
+       const absX = Math.abs(rotation[0]);
+       const absZ = Math.abs(rotation[2]);
 
-       let yRotation = (rotation[1]);
+       let yRotation = rotation[1];
 
+       //TODO: Should the not be 0 or should they not be 1?!?!?!
        // If the X and Z aren't 0, then adjust the y rotation.
        if (absX > 1 && absZ > 1) {
-         yRotation = 180 - (yRotation);
+         yRotation = 180 - yRotation;
        }
 
        this.setState({
-         rotation : [0,yRotation,0],
-         shouldBillboard : false,
+         rotation: [0, yRotation, 0],
+         shouldBillboard: false,
        });
      });
   },
 
   // Calculate distance between two vectors
   _distance(vectorOne, vectorTwo) {
-    var distance = Math.sqrt(((vectorTwo[0] - vectorOne[0]) * (vectorTwo[0] - vectorOne[0])) + ((vectorTwo[1] - vectorOne[1]) * (vectorTwo[1] - vectorOne[1])) + ((vectorTwo[2] - vectorOne[2]) * (vectorTwo[2] - vectorOne[2])));
-    return distance;
+    if(!Array.isArray(vectorOne) || !Array.isArray(vectorTwo) || vectorOne.length !== 3 || vectorTwo.length !== 3) {
+      console.error('Wrong input! Expected two number[3], instead got', vectorOne, 'and', vectorTwo);
+    }
+
+    //square root of the sum of the distances squared
+    return Math.sqrt(vectorOne.reduce((sum, coord1, index) => sum + Math.pow(vectorTwo[index] - coord1, 2), 0));
   }
 });
 

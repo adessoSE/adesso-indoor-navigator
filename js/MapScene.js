@@ -15,6 +15,7 @@ import MapView, {
   ProviderPropType,
   Marker
 } from "react-native-maps";
+import PropTypes from 'prop-types';
 import Geojson from "react-native-geojson";
 import StandMarker from "./StandMarker";
 import user from "./res/user.png";
@@ -33,13 +34,13 @@ import {
 const { width, height } = Dimensions.get("window");
 
 const ASPECT_RATIO = width / height;
-const LATITUDE = 51.50427;
-const LONGITUDE = 7.52738;
-const LATITUDE_DELTA = 0.0002;
-const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
+export const LATITUDE = 51.50427;
+export const LONGITUDE = 7.52738;
+export const LATITUDE_DELTA = 0.0002;
+export const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
 
 var floorplan = require("./res/json/floorplan_adesso.json"); //geojson data
-var types = ["Zimmer", "Toilette", "Aufzug", "Treppe", "Platz", "Technikhause"]; //predefined types of romms
+export let types = ["Zimmer", "Toilette", "Aufzug", "Treppe", "Platz", "Technikhause"]; //predefined types of romms
 /* const LATITUDE_1 = 52.49662;
 const LONGITUDE_1 = 13.454077;
  */
@@ -48,36 +49,12 @@ const LONGITUDE_1 = 13.454077;
 const LONGITUDE_1 = 6.9696;
  */
 
-const LATITUDE_1 = 51.05799077414861;
-const LONGITUDE_1 = 6.944936513900757;
+export const LATITUDE_1 = 51.05799077414861;
+export const LONGITUDE_1 = 6.944936513900757;
 
 var floorplan_1 = require("./res/json/Javascript2018_Arena.json"); //geojson data
-var types_1 = ["stand"]; //predefined types of romms
 
-var imageMarker_1 = {
-  latitude: 52.496754056778798, //adesso stand
-  longitude: 13.453710805592403
-};
-var imageMarker_2 = {
-  latitude: 52.496663038060724, //zalando stand
-  longitude: 13.453848110167216
-};
-var imageMarker_3 = {
-  latitude: 52.496767259841008, // google stand
-  longitude: 13.454353277146803
-};
-
-//current marker
-var currentMarker = 0;
-//clockwise angle to geographical north
-//const ANGEL_NORTH = -Math.PI / 12;
-
-var POSITION = {
-  x: 0,
-  y: 0
-};
-
-const geojson_template = {
+export const geojson_template = {
   type: "FeatureCollection",
   features: [
     {
@@ -90,8 +67,10 @@ const geojson_template = {
     }
   ]
 };
+
 export default class MapScene extends Component {
   constructor() {
+    console.warn('MAP!!!');
     super();
 
     this.state = {
@@ -113,23 +92,19 @@ export default class MapScene extends Component {
       }
     };
   }
+
   componentDidMount() {
-    let features_array = [];
-    /* types_1.map(type =>
-      features_array.push(this.typeFilter(type, floorplan_1))
-    ); */
-    //features_array.push(floorplan_1);
-    //features_array.push(this.props.viroAppProps.featuresmap);
-    //features_array.push(inet_floorplan);
+    let newFeaturesArray = [];
 
     if (this.state.featuresArray.length === 0) {
       this.getFeatures().then(res => {
-        features_array.push(res);
-        this.setState({ featuresArray: features_array });
+        newFeaturesArray.push(res);
+        this.setState({ featuresArray: newFeaturesArray });
       });
     }
   }
-  componentDidUpdate(prevProps, prevState) {
+
+  componentDidUpdate() {
     const markerCoordinates = this.props.viroAppProps.currentMarkerCoordinates;
     this.map.animateToRegion({
       latitude: this.calcPostion(markerCoordinates, {
@@ -144,10 +119,26 @@ export default class MapScene extends Component {
       longitudeDelta: LONGITUDE_DELTA
     });
   }
+
+  createMarkersFromFeatures = (features) => features.map((item) => 
+    item.features.map((feature, i) => (
+      <Marker
+        key={feature.properties.name + i}
+        coordinate={{
+          ...this.state.coordinate,
+          latitude: feature.geometry.coordinates[0][0][0][1],
+          longitude: feature.geometry.coordinates[0][0][0][0]
+        }}
+      >
+        <StandMarker name={feature.properties.name} />
+      </Marker>
+    ))
+  );
+
   // Replace this function with the contents of _getVRNavigator() or _getARNavigator()
   // if you are building a specific type of experience.
   render() {
-    const fArr = this.state.featuresArray;
+    const featuresArray = this.state.featuresArray;
 
     return (
       <View style={this.props.style}>
@@ -159,27 +150,12 @@ export default class MapScene extends Component {
           style={styles.map}
           initialRegion={this.state.region}
         >
-          {fArr.map((item, i) => {
-            return item.features.map((feature, i) => {
-              return (
-                <Marker
-                  key={feature.properties.name + i}
-                  coordinate={{
-                    ...this.state.coordinate,
-                    latitude: feature.geometry.coordinates[0][0][0][1],
-                    longitude: feature.geometry.coordinates[0][0][0][0]
-                  }}
-                >
-                  <StandMarker name={feature.properties.name} />
-                </Marker>
-              );
-            });
-          })}
+          {this.createMarkersFromFeatures(featuresArray)}
 
           {/* Set Floorplan Polygons */
-          /* TODO: replace floorplan_1 with viroAppprop */}
+          /* TODO: replace floorplan with viroAppprop */}
           <Geojson
-            geojson={floorplan_1}
+            geojson={floorplan}
             fillColor={"#6304c2"}
             strokeColor={"#555555"}
           />
@@ -206,12 +182,14 @@ export default class MapScene extends Component {
     let features_new = data.features.filter(
       feature => feature.properties.type === type
     );
-    let filtered = { ...floorplan_1, features: features_new };
+    let filtered = { ...floorplan, features: features_new };
     return filtered;
   }
+
   onRegionChange(region) {
     this.setState({ region });
   }
+
   calcPostion(marker, position) {
     const ANGLE = -this.props.viroAppProps.heading / 180;
     //calculate postion regarding geographical north
@@ -225,22 +203,30 @@ export default class MapScene extends Component {
     };
     //return { latitude:LATITUDE_1+delta_lat, longitude:LONGITUDE_1+delta_long};
   }
+
   /* Fetch Floorplan Features from json which is stored in viroAppProps */
   async getFeatures() {
     try {
       let response = await fetch(this.props.viroAppProps.featuresmap);
-      let responseJson = await response.json();
-      return responseJson;
+      return response.json();
     } catch (error) {
       console.error(error);
     }
   }
 }
+
 MapScene.propTypes = {
-  provider: ProviderPropType
+  provider: ProviderPropType,
+  viroAppProps: {
+    currentMarkerCoordinates: PropTypes.array,
+    position: PropTypes.array,
+    heading: PropTypes.any,
+    featuresmap: PropTypes.any
+  },
+  style: PropTypes.any
 };
 
-const styles = StyleSheet.create({
+export const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: "flex-end",

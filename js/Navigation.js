@@ -25,6 +25,7 @@ import {
   ViroSphere,
   ViroText
 } from "react-viro";
+import PropTypes from 'prop-types';
 
 var createReactClass = require("create-react-class");
 var markerID = 0;
@@ -37,7 +38,42 @@ var markers = null;
 var DEBUG;
 var Scanning = false;
 var TargetObjects = null;
+
+var styles = StyleSheet.create({
+  helloWorldTextStyle: {
+    fontFamily: "Arial",
+    fontSize: 30,
+    color: "#ffffff",
+    textAlignVertical: "center",
+    textAlign: "center"
+  },
+  hud_text: {
+    fontSize: 20,
+    fontFamily: "Roboto, Helvetica",
+    fontWeight: "700",
+    color: "#0275d8",
+    flex: 1
+  }
+});
+
 var Navigation = createReactClass({
+  propTypes: () => ({
+    arSceneNavigator: {
+      viroAppProps: {
+        markers: PropTypes.array,
+        showPointCloud: PropTypes.bool,
+        pauseUpdates: PropTypes.bool,
+        destination: PropTypes.any,
+        destinationLocation: PropTypes.any,
+        _getListData: PropTypes.func,
+        _setMarkerID: PropTypes.func,
+        _getCameraPosition: PropTypes.func,
+        _getMarkerPosition: PropTypes.func,
+        _onCameraUpdate: PropTypes.func
+      }
+    }
+  }),
+
   /* Initial State */
   getInitialState: function() {
     return {
@@ -182,6 +218,7 @@ var Navigation = createReactClass({
 
     return arMarkerArray;
   },
+
   _getPOIModel(id, pos, rot) {
     if (id === markerID) {
       return (
@@ -254,6 +291,7 @@ var Navigation = createReactClass({
     this.props.arSceneNavigator.viroAppProps._getListData(location);
     this.props.arSceneNavigator.viroAppProps._setMarkerID(name);
   },
+
   /* On Anchor Updated */
   _onAnchorUpdated(name) {
     markerID = name;
@@ -273,7 +311,7 @@ var Navigation = createReactClass({
     this.refs["arscene"].getCameraOrientationAsync().then(orientation => {
       Camera = orientation;
     });
-    /*Get Camera Position and update relativ position to marker*/
+    /*Get Camera Position and update relative position to marker*/
     if (Camera) {
       this.props.arSceneNavigator.viroAppProps._getCameraPosition(
         Camera.position
@@ -296,6 +334,7 @@ var Navigation = createReactClass({
       );
     }
   },
+
   _getDestinationObject(ref) {
     if (this.refs[ref]) {
       this.refs[ref].getTransformAsync().then(transform => {
@@ -303,11 +342,13 @@ var Navigation = createReactClass({
       });
     }
   },
+
   _onModelLoad() {
     setTimeout(() => {
       this.setState({});
     }, 3000);
   },
+
   // Calculate distance between two vectors
   _distance(vectorOne, vectorTwo) {
     var distance = Math.sqrt(
@@ -317,6 +358,7 @@ var Navigation = createReactClass({
     );
     return distance;
   },
+
   _normalize(vec) {
     const length = Math.sqrt(
       Math.pow(vec[0], 2) + Math.pow(vec[1], 2) + Math.pow(vec[2], 2)
@@ -325,6 +367,7 @@ var Navigation = createReactClass({
     const normalized = [x / length, y / length, z / length];
     return normalized;
   },
+
   _subtract(v1, v2) {
     const [x1, y1, z1] = v1;
     const [x2, y2, z2] = v2;
@@ -332,6 +375,7 @@ var Navigation = createReactClass({
     // Same result with mathJS
     return vec;
   },
+
   /* Returns an array of which indicator should be shown  */
   /* //FIXME: Position mitbeachten */
   _indicator() {
@@ -376,45 +420,52 @@ var Navigation = createReactClass({
   }
 });
 
-var styles = StyleSheet.create({
-  helloWorldTextStyle: {
-    fontFamily: "Arial",
-    fontSize: 30,
-    color: "#ffffff",
-    textAlignVertical: "center",
-    textAlign: "center"
-  }
-});
+// Navigation.propTypes = {
+//   arSceneNavigator: {
+//     viroAppProps: {
+//       markers: PropTypes.array,
+//       showPointCloud: PropTypes.bool,
+//       pauseUpdates: PropTypes.bool,
+//       destination: PropTypes.any,
+//       destinationLocation: PropTypes.any,
+//       _getListData: PropTypes.func,
+//       _setMarkerID: PropTypes.func,
+//       _getCameraPosition: PropTypes.func,
+//       _getMarkerPosition: PropTypes.func,
+//       _onCameraUpdate: PropTypes.func
+//     }
+//   }
+// };
 
 //
 // ─── CREATE TARGETS ─────────────────────────────────────────────────────────────
 //
 
-function createTargets() {
-  return new Promise((resolve, reject) => {
-    // load Markers from json
-    let targetObject = {};
-    markers.forEach(marker => {
-      let targetname = marker.location + "" + marker.nr;
-      let pair = {
-        [targetname]: {
-          source: { uri: marker.url },
-          physicalWidth: marker.width,
-          orientation: "Up"
-        }
-      };
-      targetObject = { ...targetObject, ...pair };
-    });
-    /* Create Targets from object */
-    ViroARTrackingTargets.createTargets(targetObject);
-    TargetObjects = targetObject;
-    if (Object.keys(targetObject).length === markers.length) {
-      resolve();
-    } else {
-      reject("Error while creating Targets");
-    }
+async function createTargets() {
+  let targetObject = {};
+
+  markers.forEach(marker => {
+    let targetname = marker.location + "" + marker.nr;
+    targetObject[targetname] = {
+      source: {
+        uri: marker.url
+      },
+      physicalWidth: marker.width,
+      orientation: "Up"
+    };
   });
+
+  /* Create Targets from object */
+  ViroARTrackingTargets.createTargets(targetObject);
+  TargetObjects = targetObject;
+
+  if (Object.keys(targetObject).length === markers.length) {
+    return;
+  } else {
+    throw new Error("Error while creating Targets");
+  }
 }
+
 ViroAnimations.registerAnimations({
   scaleModel: {
     properties: { scaleX: 1, scaleY: 1, scaleZ: 1 },
@@ -428,13 +479,4 @@ ViroMaterials.createMaterials({
   }
 });
 
-var styles = StyleSheet.create({
-  hud_text: {
-    fontSize: 20,
-    fontFamily: "Roboto, Helvetica",
-    fontWeight: "700",
-    color: "#0275d8",
-    flex: 1
-  }
-});
 module.exports = Navigation;

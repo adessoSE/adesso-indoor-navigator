@@ -15,10 +15,11 @@ import {
   View
 } from "react-native";
 
+import config from './config';
+import localStyles from './localStyles';
+
 // Device Heading
 import ReactNativeHeading from "@zsajjad/react-native-heading";
-
-import config from './config';
 
 //
 // ─── LOGIN FORM ─────────────────────────────────────────────────────────────────
@@ -31,24 +32,6 @@ const User = t.struct({
   password: t.String
 });
 
-const options = {
-  fields: {
-    email: {
-      error: "Please enter a valid @adesso Mail.",
-      autoCorrect: false,
-      autoCapitalize: "none",
-      autoFocus: true,
-      textContentType: "username"
-    },
-    password: {
-      error: "Please enter your password.",
-      password: true,
-      secureTextEntry: true,
-      textContentType: "password"
-    }
-  },
-  stylesheet: formStyles
-};
 const formStyles = {
   ...Form.stylesheet,
   formGroup: {
@@ -72,6 +55,25 @@ const formStyles = {
     }
   }
 };
+
+const options = {
+  fields: {
+    email: {
+      error: config.firebase.emailInputErrorMessage,
+      autoCorrect: false,
+      autoCapitalize: "none",
+      autoFocus: true,
+      textContentType: "username"
+    },
+    password: {
+      error: "Please enter your password.",
+      password: true,
+      secureTextEntry: true,
+      textContentType: "password"
+    }
+  },
+  stylesheet: formStyles
+};
 // ────────────────────────────────────────────────────────────────────────────────
 
 //
@@ -89,9 +91,7 @@ import ModalFilterPicker from "react-native-modal-filter-picker";
 import { ViroSceneNavigator, ViroARSceneNavigator } from "react-viro";
 import MapScene from "./js/MapScene";
 
-var sharedProps = {
-  apiKey: config.viro.apiKey
-};
+var sharedProps = config.viro;
 // Sets the default scene you want for AR and VR
 var InitialARScene = require("./js/Navigation");
 
@@ -105,13 +105,6 @@ var defaultPauseUpdates = false;
 export default class ViroSample extends Component {
   constructor() {
     super();
-    this._getListData = this._getListData.bind(this);
-    this._onCameraUpdate = this._onCameraUpdate.bind(this);
-    this._toggleDetection = this._toggleDetection.bind(this);
-    this._setMarkerID = this._setMarkerID.bind(this);
-    this._getCameraPosition = this._getCameraPosition.bind(this);
-    this._getMarkerPosition = this._getMarkerPosition.bind(this);
-    this._getPosition = this._getPosition.bind(this);
 
     this.state = {
       distance: 0,
@@ -155,17 +148,13 @@ export default class ViroSample extends Component {
     /* Set email and password */
     if (value) {
       this.setState(
-        prevState => {
-          const newState = prevState;
-          newState.userData = value;
-          return newState;
-        },
+        {userData: value},
         () => this.login()
       );
     }
-  };
+  }
 
-  login() {
+  login = () => {
     /* Firebase Authentication */
     firebase
       .auth()
@@ -185,60 +174,70 @@ export default class ViroSample extends Component {
         })
       );
   }
-  createHeadingListener() {
+
+  createHeadingListener = () => {
     console.log("Creating HeadingListener");
     let headings = [];
-    this.listener = new NativeEventEmitter(ReactNativeHeading);
-    ReactNativeHeading.start(1).then(didStart => {
-      this.setState({
-        headingIsSupported: didStart
-      });
-    });
 
-    this.listener.addListener("headingUpdated", heading => {
-      console.log(heading, heading.headingAccuracy, heading.trueHeading);
-      /* rewrote npm package to get headingAccuracy and trueHeading value */
-      /* /node_modules/@zsajjad/react-native-heading/ReactNativeHeading.m */
-      /*
-          _heading = @{
-        @"trueHeading": @(newHeading.trueHeading),
-        @"headingAccuracy": @(newHeading.headingAccuracy)
-        };
+    if(ReactNativeHeading === undefined) {
+      // throw new Error('ReactNativeHeading may not be undefined!');
+    }
 
-        [self sendEventWithName:@"headingUpdated" body:(_heading)];
-     */
+    this.headingListener = new NativeEventEmitter(ReactNativeHeading);
+    // ReactNativeHeading.start(1).then(didStart => {
+    //   this.setState({
+    //     headingIsSupported: didStart
+    //   });
+    // });
 
-      if (this.state.headingAccuracy !== heading.headingAccuracy) {
-        /* Heading accuracy changed  */
-        this.setState(
-          {
-            headingAccuracy: heading.headingAccuracy
-          },
-          () => {
-            console.log("headingAccuracy set to " + this.state.headingAccuracy);
-          }
-        );
-      }
-      /* set Heading when user wants to start OR if Accuracy is good*/
-      if (this.state.startAR || heading.headingAccuracy <= 20) {
-        console.log("Stopping HeadingListener");
-        this.stopHeadingListener();
-        /* Accurate Heading found */
-        this.setState(
-          {
-            viroAppProps: {
-              ...this.state.viroAppProps,
-              heading: heading.trueHeading
-            }
-          },
-          () => {
-            console.log("Heading set to " + this.state.viroAppProps.heading);
-          }
-        );
-      }
-    });
+    this.headingListener.addListener("headingUpdated", this.onHeadingUpdated);
   }
-  componentDidMount() {
+
+  onHeadingUpdated = heading => {
+    console.log(heading, heading.headingAccuracy, heading.trueHeading);
+    /* rewrote npm package to get headingAccuracy and trueHeading value */
+    /* /node_modules/@zsajjad/react-native-heading/ReactNativeHeading.m */
+    /*
+        _heading = @{
+      @"trueHeading": @(newHeading.trueHeading),
+      @"headingAccuracy": @(newHeading.headingAccuracy)
+      };
+
+      [self sendEventWithName:@"headingUpdated" body:(_heading)];
+   */
+
+    if (this.state.headingAccuracy !== heading.headingAccuracy) {
+      /* Heading accuracy changed  */
+      this.setState(
+        {
+          headingAccuracy: heading.headingAccuracy
+        },
+        () => {
+          console.log("headingAccuracy set to " + this.state.headingAccuracy);
+        }
+      );
+    }
+
+    /* set Heading when user wants to start OR if Accuracy is good*/
+    if (this.state.startAR || heading.headingAccuracy <= 20) {
+      console.log("Stopping HeadingListener");
+      this.stopHeadingListener();
+      /* Accurate Heading found */
+      this.setState(
+        {
+          viroAppProps: {
+            ...this.state.viroAppProps,
+            heading: heading.trueHeading
+          }
+        },
+        () => {
+          console.log("Heading set to " + this.state.viroAppProps.heading);
+        }
+      );
+    }
+  }
+
+  componentDidMount = () => {
     /* Device Heading Listener */
     this.createHeadingListener();
 
@@ -255,11 +254,12 @@ export default class ViroSample extends Component {
     firebase.auth().onAuthStateChanged(user => {
       if (user) {
         console.info("User Logged in");
-        /* Logged in */
+
         this.setState({
           isSignedIn: true,
           modalVisible: true
         });
+
         /* Get Data */
         itemsRef.on("value", snapshot => {
           let data = snapshot.val();
@@ -280,38 +280,48 @@ export default class ViroSample extends Component {
     });
   }
 
-  componentWillUnmount() {
+  componentWillUnmount = () => {
     console.log("ComponentWillunmount");
     //this.stopHeadingListener();
   }
-  stopHeadingListener() {
+
+  stopHeadingListener = () => {
     ReactNativeHeading.stop();
-    this.listener.removeAllListeners("headingUpdated");
+    this.headingListener.removeAllListeners("headingUpdated");
   }
-  getMarkers() {
+
+  getMarkers = () => {
     const items = this.state.viroAppProps.items;
     let markers = [];
+
+    console.warn(items);
+
+    /*
+     * Saves coordinates of all markers by marker name + index.
+     * Example: a marker named "someMarker" at index 3 would lead
+     * to the key 'someMarker3'
+     */
     let coordsObj = {};
-    /* Get every marker and add location, nr */
+
     items.forEach(item => {
       if (item.markers) {
         item.markers.forEach((marker, index) => {
-          //console.log("MARKERINDEXCOORDS:", marker.coordinator);
+          //TODO: change nr to number / index
+          /* Save every marker together with it's location and number (nr) */
           markers.push({
             ...marker,
             location: item.name,
             nr: index
           });
-          /* Add marker coordinates to coordsObj */
+
+          // Add marker coordinates to coordsObj
           if (marker.coordinator) {
-            coordsObj = {
-              ...coordsObj,
-              [item.name + index]: marker.coordinator
-            };
+            coordsObj[item.name + index] = marker.coordinator;
           }
         });
       }
     });
+
     this.setState({
       viroAppProps: {
         ...this.state.viroAppProps,
@@ -320,10 +330,168 @@ export default class ViroSample extends Component {
       }
     });
   }
-  // Replace this function with the contents of _getVRNavigator() or _getARNavigator()
-  // if you are building a specific type of experience.
+
+  createScanButton = () => (
+    <View
+      style={{
+        position: "absolute",
+        left: 15,
+        right: 0,
+        top: 15,
+        alignItems: "flex-start"
+      }}
+    >
+      <TouchableHighlight onPress={this._toggleDetection}>
+        <Image
+          style={localStyles.icon}
+          source={require("./js/res/barcode.png")}
+        />
+      </TouchableHighlight>
+    </View>
+  )
+
+  createDestinationButton = () => {
+    if (this.state.viroAppProps.destinationLocation) {
+      return (
+        <View
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: 25,
+            alignItems: "center"
+          }}
+        >
+          <TouchableHighlight
+            style={localStyles.buttons}
+            onPress={this.onShow}
+            underlayColor={"#68a0ff"}
+          >
+            <Text style={localStyles.buttonText}>
+              {this.state.viroAppProps.destination !== "none"
+                ? "Destination: " + this.state.viroAppProps.destination
+                : "Choose Destination"}
+            </Text>
+          </TouchableHighlight>
+        </View>        
+      );
+    } else {
+      return null;
+    }
+  }
+
+  createDistanceText = () => (
+    <View
+      style={{
+        position: "absolute",
+        left: 0,
+        right: 0,
+        bottom: 10,
+        alignItems: "center"
+      }}
+    >
+      <Text style={localStyles.buttonText}>
+        {this.state.viroAppProps.destination !== "none"
+          ? this.state.distance !== 0
+            ? "Distance: " + this.state.distance + " m"
+            : "Please scan a marker!"
+          : ""}
+      </Text>
+    </View>
+  )
+
+  createDebugCamera = (showCamera = false) => {
+    if (showCamera) {
+      return (
+        <View
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: "50%",
+            alignItems: "center"
+          }}
+        >
+          <Text style={localStyles.debugText}>
+            {/* <Text>{this.state.viroAppProps.heading + ""}</Text> */}
+            {/*   {"cameraPosition:" +
+                JSON.stringify(this.state.viroAppProps.cameraPosition) +
+                "\n"}
+              {"markerPosition:" +
+                JSON.stringify(this.state.viroAppProps.markerPosition) +
+                "\n"}
+              {"Position:" +
+                JSON.stringify(this.state.viroAppProps.position) +
+                "\n"} */}
+          </Text>
+        </View>
+      );
+    }
+  }
+
+  createModalFilterPicker = () => {
+    return this.state.options !== null ? (
+      <ModalFilterPicker
+        title={"Select Destination"}
+        visible={this.state.modalVisible}
+        onSelect={this.onSelect}
+        onCancel={this.onCancel}
+        options={this.state.options}
+        placeholderText={"Büro, Vorname, Nachname"}
+      />
+    ) : null;
+  }
+
+  createLoginForm = () => (
+    <View>
+      <Form
+        ref={c => (this._form = c)} // assign a ref
+        type={User}
+        options={options}
+      />
+      <Button title="Sign in" onPress={this.handleSubmit} />
+    </View>
+  )
+
+  createStartingScreen = () => (
+    <View>
+      <Text>
+        Heading accuracy is:
+        {this.state.headingAccuracy > 20 ? (
+          <Text style={{ color: "red" }}>
+            low: {this.state.headingAccuracy}
+          </Text>
+        ) : (
+          <Text style={{ color: "green" }}>{this.state.headingAccuracy}</Text>
+        )}
+      </Text>
+
+      <View>
+        <TouchableHighlight
+          style={localStyles.startARButton}
+          onPress={this.onStartAR}
+          underlayColor={"#ff8888"}
+        >
+          <Text style={localStyles.buttonText}>Start AR</Text>
+        </TouchableHighlight>
+      </View>
+    </View>
+  )
+
+  createLoginFailedScreen = () => (
+    <Text style={{ color: "red" }}>
+      Login Failed. Make sure you are registered.
+    </Text>
+  )
+
+  testStuff = () => {
+    const markers = this.state.viroAppProps.currentMarkerCoordinates;
+    console.warn(JSON.stringify({USEMAP, markers}));
+    return true;
+  }
+    
   render() {
-    const { modalVisible, isSignedIn, headingAccuracy, startAR } = this.state;
+    const { isSignedIn, startAR } = this.state;
 
     return (
       <React.Fragment>
@@ -334,167 +502,39 @@ export default class ViroSample extends Component {
         {(isSignedIn && this.state.viroAppProps.heading !== null) ||
         (isSignedIn && startAR) ? (
           <View style={localStyles.outer}>
-            {this.state.options !== null ? (
-              <ModalFilterPicker
-                title={"Select Destination"}
-                visible={modalVisible}
-                onSelect={this.onSelect}
-                onCancel={this.onCancel}
-                options={this.state.options}
-                placeholderText={"Büro, Vorname, Nachname"}
-              />
-            ) : (
-              <View />
-            )}
+            {this.createModalFilterPicker()}
             <ViroARSceneNavigator
               style={localStyles.arView}
               {...this.state.sharedProps}
               initialScene={{ scene: InitialARScene }}
               viroAppProps={this.state.viroAppProps}
             />
-            {/* Scan Button */}
-            <View
-              style={{
-                position: "absolute",
-                left: 15,
-                right: 0,
-                top: 15,
-                alignItems: "flex-start"
-              }}
-            >
-              <TouchableHighlight onPress={this._toggleDetection}>
-                <Image
-                  style={localStyles.icon}
-                  source={require("./js/res/barcode.png")}
-                />
-              </TouchableHighlight>
-            </View>
-            {/* Desitnation Button */}
-            {this.state.viroAppProps.destinationLocation ? (
-              <View
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  bottom: 25,
-                  alignItems: "center"
-                }}
-              >
-                <TouchableHighlight
-                  style={localStyles.buttons}
-                  onPress={this.onShow}
-                  underlayColor={"#68a0ff"}
-                >
-                  <Text style={localStyles.buttonText}>
-                    {this.state.viroAppProps.destination !== "none"
-                      ? "Destination: " + this.state.viroAppProps.destination
-                      : "Choose Destination"}
-                  </Text>
-                </TouchableHighlight>
-              </View>
-            ) : null}
-            {/* Distance Text */}
-            <View
-              style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                bottom: 10,
-                alignItems: "center"
-              }}
-            >
-              <Text style={localStyles.buttonText}>
-                {this.state.viroAppProps.destination !== "none"
-                  ? this.state.distance !== 0
-                    ? "Distance: " + this.state.distance + " m"
-                    : "Please scan a marker!"
-                  : ""}
-              </Text>
-            </View>
-            {USEMAP && this.state.viroAppProps.currentMarkerCoordinates ? (
+            {this.createScanButton()}
+            {this.createDestinationButton()}
+            {this.createDistanceText()}
+            {USEMAP && this.state.viroAppProps.currentMarkerCoordinates && this.testStuff() ? (
               <MapScene
                 style={localStyles.map}
                 viroAppProps={this.state.viroAppProps}
               />
             ) : null}
-            {/* Indicator */}
-            {this._getIndicatorLR()}
-            {this._getIndicatorTB()}
-            {/* Debug Camera */}
-            {
-              // <View
-              //   style={{
-              //     position: "absolute",
-              //     left: 0,
-              //     right: 0,
-              //     bottom: "50%",
-              //     alignItems: "center"
-              //   }}
-              // >
-              //   <Text style={localStyles.debugText}>
-              //     {/* <Text>{this.state.viroAppProps.heading + ""}</Text> */}
-              //     {/*   {"cameraPosition:" +
-              //         JSON.stringify(this.state.viroAppProps.cameraPosition) +
-              //         "\n"}
-              //       {"markerPosition:" +
-              //         JSON.stringify(this.state.viroAppProps.markerPosition) +
-              //         "\n"}
-              //       {"Position:" +
-              //         JSON.stringify(this.state.viroAppProps.position) +
-              //         "\n"} */}
-              //   </Text>
-              // </View>
-            }
+
+            {/* Indicators */}
+            {this._getIndicatorLeftRight()}
+            {this._getIndicatorTopBottom()}
+
+            {/* Debug Camera, not shown by default */}
+            {this.createDebugCamera()}
           </View>
         ) : (
-          //
-          // LOGIN FORM
-          //
-          /* Failed login message */
+          // Login and info / start screen after login
           <View style={localStyles.loginContainer}>
-            {isSignedIn === false ? (
-              <Text style={{ color: "red" }}>
-                Login Failed. Make sure you are registered.
-              </Text>
-            ) : null}
-            <View>
-              {isSignedIn === true ? (
-                <View>
-                  <Text>
-                    Heading accuracy is:
-                    {headingAccuracy > 20 ? (
-                      <Text style={{ color: "red" }}>
-                        low: {headingAccuracy}
-                      </Text>
-                    ) : (
-                      <Text style={{ color: "green" }}>{headingAccuracy}</Text>
-                    )}
-                  </Text>
-
-                  <View>
-                    <TouchableHighlight
-                      style={localStyles.startARButton}
-                      onPress={this.onStartAR}
-                      underlayColor={"#ff8888"}
-                    >
-                      <Text style={localStyles.buttonText}>Start AR</Text>
-                    </TouchableHighlight>
-                  </View>
-                </View>
-              ) : (
-                <View>
-                  <Form
-                    ref={c => (this._form = c)} // assign a ref
-                    type={User}
-                    options={options}
-                  />
-                  <Button title="Sign in" onPress={this.handleSubmit} />
-                </View>
-              )}
-            </View>
+            {isSignedIn === false ?
+              this.createLoginFailedScreen() :
+              (<View>
+                {isSignedIn === true ? this.createStartingScreen() : this.createLoginForm()}
+              </View>)}
           </View>
-          // /LOGIN• • • • •
-        )}
         )}
       </React.Fragment>
     );
@@ -502,13 +542,15 @@ export default class ViroSample extends Component {
 
   onShow = () => {
     this.setState({ modalVisible: true });
-  };
+  }
 
   onStartAR = () => {
     this.setState({ startAR: true });
-  };
+  }
+
   onSelect = picked => {
     /* Filter the current picked entry  */
+    //TODO: handle case that destPos is not found. Maybe use Array.prototype.indexOf
     let destPos = this.state.locations.pois.filter(
       poi => poi.title === picked.key
     )[0];
@@ -521,19 +563,19 @@ export default class ViroSample extends Component {
         destinationLocation: destPos
       }
     });
-  };
+  }
 
   onCancel = () => {
     this.setState({
       modalVisible: false
     });
-  };
+  }
 
   //
   // ─── INDICATORS ─────────────────────────────────────────────────────────────────
   //
 
-  _getIndicatorLR() {
+  _getIndicatorLeftRight = () => {
     if (this.state.indicator) {
       return (
         /* Indicator Left */
@@ -574,7 +616,7 @@ export default class ViroSample extends Component {
     }
   }
 
-  _getIndicatorTB() {
+  _getIndicatorTopBottom = () => {
     if (this.state.indicator) {
       return (
         /* Indicator Top */
@@ -618,15 +660,16 @@ export default class ViroSample extends Component {
     }
   }
 
-  _getListData(location) {
+  _getListData = locationName => {
     /*  get locaiton list Data after scanned Marker (known location)  */
     const items = this.state.viroAppProps.items;
-    let opt = [];
-    const locations = items.filter(item => item.name === location);
+    const locations = items.filter(item => item.name === locationName);
+    let options = [];
+    //TODO: replace with locations.length > 0
     if (locations) {
       /* push each poi name into options */
       locations[0].pois.forEach(poi => {
-        opt.push({
+        options.push({
           key: poi.title,
           label: poi.title,
           searchKey: poi.title
@@ -634,12 +677,12 @@ export default class ViroSample extends Component {
       });
       this.setState({
         locations: locations[0],
-        options: opt
+        options: options
       });
     }
   }
 
-  _toggleDetection() {
+  _toggleDetection = () => {
     this.setState({
       viroAppProps: {
         ...this.state.viroAppProps,
@@ -652,7 +695,7 @@ export default class ViroSample extends Component {
   // ─── CAMERAPOSITION ─────────────────────────────────────────────────────────────
   //
 
-  _onCameraUpdate(distance, indicator) {
+  _onCameraUpdate = (distance, indicator) => {
     if (
       (!this.state.modalVisible && distance < this.state.distance - 0.1) ||
       distance > this.state.distance + 0.1
@@ -663,7 +706,8 @@ export default class ViroSample extends Component {
       });
     }
   }
-  _getCameraPosition(position) {
+
+  _getCameraPosition = position => {
     /* set new Position if there is a significant difference */
     const newpos = position.reduce(
       (accumulator, currentValue) => accumulator + currentValue
@@ -683,7 +727,8 @@ export default class ViroSample extends Component {
       });
     }
   }
-  _getMarkerPosition(position) {
+
+  _getMarkerPosition = position => {
     this.setState({
       viroAppProps: {
         ...this.state.viroAppProps,
@@ -691,7 +736,8 @@ export default class ViroSample extends Component {
       }
     });
   }
-  _getPosition() {
+
+  _getPosition = () => {
     if (
       this.state.viroAppProps.markerPosition &&
       this.state.viroAppProps.cameraPosition
@@ -699,20 +745,23 @@ export default class ViroSample extends Component {
       let position = [
         this.state.viroAppProps.cameraPosition[0] -
           this.state.viroAppProps.markerPosition[0],
+
         this.state.viroAppProps.cameraPosition[1] -
           this.state.viroAppProps.markerPosition[1],
+
         this.state.viroAppProps.cameraPosition[2] -
           this.state.viroAppProps.markerPosition[2]
       ];
       return position;
     }
   }
-  _setMarkerID(id) {
+
+  _setMarkerID = id => {
     /* Marker Found */
     /* Check if new Marker is found */
     if (id !== this.state.viroAppProps.markerID) {
       console.log("Set MarkerID & pauseUpdates true");
-      console.log(
+      console.warn(
         "This ID is: ",
         id,
         "and coords: ",
@@ -740,115 +789,5 @@ export default class ViroSample extends Component {
     }
   }
 }
-
-var localStyles = StyleSheet.create({
-  loginContainer: {
-    justifyContent: "center",
-    marginTop: 50,
-    padding: 20,
-    backgroundColor: "#ffffff"
-  },
-  viroContainer: {
-    flex: 1,
-    backgroundColor: "black"
-  },
-  outer: {
-    flex: 1,
-    backgroundColor: "rgba(1,1,1,0.2)"
-  },
-  arView: {
-    flex: 2,
-    backgroundColor: "transparent"
-  },
-  map: {
-    justifyContent: "center",
-    alignItems: "center",
-    alignSelf: "flex-end",
-    position: "absolute",
-    backgroundColor: "transparent"
-  },
-  inner: {
-    flex: 1,
-    flexDirection: "column",
-    alignItems: "center",
-    backgroundColor: "black"
-  },
-  titleText: {
-    paddingTop: 30,
-    paddingBottom: 20,
-    color: "#fff",
-    textAlign: "center",
-    fontSize: 25
-  },
-  buttonText: {
-    color: "#fff",
-    textAlign: "center",
-    fontSize: 20
-  },
-  debugText: {
-    color: "#fff",
-    textAlign: "left",
-    fontSize: 16
-  },
-  buttons: {
-    height: 70,
-    width: 250,
-    paddingTop: 20,
-    paddingBottom: 20,
-    marginTop: 10,
-    marginBottom: 10,
-    backgroundColor: "#68a0cf",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#fff"
-  },
-  startARButton: {
-    height: 70,
-    width: 250,
-    paddingTop: 20,
-    paddingBottom: 20,
-    marginTop: 10,
-    marginBottom: 10,
-    backgroundColor: "#cc2222",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#fff"
-  },
-  exitButton: {
-    height: 50,
-    width: 100,
-    paddingTop: 10,
-    paddingBottom: 10,
-    marginTop: 10,
-    marginBottom: 10,
-    backgroundColor: "#68a0cf",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#fff"
-  },
-  icon: {
-    height: 64,
-    width: 64
-  },
-  arrowleft: {
-    width: 73,
-    height: 147
-  },
-  arrowtop: {
-    width: 73,
-    height: 147,
-    transform: [{ rotate: "90deg" }]
-  },
-  arrowright: {
-    width: 73,
-    height: 147,
-    transform: [{ rotate: "180deg" }]
-  },
-  arrowbottom: {
-    width: 73,
-    height: 147,
-    transform: [{ rotate: "-90deg" }]
-  }
-});
 
 module.exports = ViroSample;
