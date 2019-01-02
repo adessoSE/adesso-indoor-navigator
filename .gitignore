@@ -1,0 +1,78 @@
+#User specific configuration
+config.js
+js/res/json/*
+
+#From .gitignore that was originally in the parent directory
+ios/Podfile.lock
+ios/ngrokendpoint.txt
+ios/Pods/Manifest.lock
+ios/Pods/Headers/Private/ViroReact/VRTMaterialChangedDelegate.h
+ios/Pods/Headers/Private/ViroReact/VRTPolygonManager.h
+ios/Pods/Headers/Public/ViroReact/VRTMaterialChangedDelegate.h
+ios/Pods/Headers/Public/ViroReact/VRTPolygonManager.h
+ios/Pods/Pods.xcodeproj/project.pbxproj
+ios/Pods/Target Support Files/AWSCore/AWSCore.xcconfig
+ios/Pods/Target Support Files/AWSDynamoDB/AWSDynamoDB.xcconfig
+ios/Pods/Target Support Files/GTMSessionFetcher/GTMSessionFetcher.xcconfig
+ios/Pods/Target Support Files/GoogleToolboxForMac/GoogleToolboxForMac.xcconfig
+ios/Pods/Target Support Files/Pods-ViroSample/Pods-ViroSample-frameworks.sh
+ios/Pods/Target Support Files/Pods-ViroSample/Pods-ViroSample-resources.sh
+ios/Pods/Target Support Files/Pods-ViroSample/Pods-ViroSample.debug.xcconfig
+ios/Pods/Target Support Files/Pods-ViroSample/Pods-ViroSample.release.xcconfig
+ios/ViroSample/Info.plist
+ios/ViroSample.xcodeproj/project.pbxproj
+ios/*
+
+# OSX
+#
+*.DS_Store
+
+# Xcode
+#
+build/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata
+*.xccheckout
+*.moved-aside
+DerivedData
+*.hmap
+*.ipa
+*.xcuserstate
+project.xcworkspace
+
+# Android/IntelliJ
+#
+build/
+.idea
+.gradle
+local.properties
+*.iml
+
+# node.js
+#
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# BUCK
+buck-out/
+\.buckd/
+*.keystore
+
+# fastlane
+#
+# It is recommended to not store the screenshots in the git repo. Instead, use fastlane to re-generate the
+# screenshots whenever they are needed.
+# For more information about the recommended setup visit:
+# https://docs.fastlane.tools/best-practices/source-control/
+
+*/fastlane/report.xml
+*/fastlane/Preview.html
+*/fastlane/screenshots
