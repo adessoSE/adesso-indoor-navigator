@@ -2,6 +2,9 @@
 config.js
 js/res/json/*
 
+# Test coverage data
+coverage/
+
 #From .gitignore that was originally in the parent directory
 ios/Podfile.lock
 ios/ngrokendpoint.txt
