@@ -102,7 +102,6 @@ android {
         minSdkVersion 23
         targetSdkVersion 25
         multiDexEnabled true
-        multiDexEnabled true
         versionCode 1
         versionName "1.0"
         ndk {
@@ -118,17 +117,10 @@ android {
         }
     }
     productFlavors {
-        gvr {
-            resValue 'string', 'app_name', 'ViroSample-gvr'
+        ar {
+            resValue 'string', 'app_name', 'ViroSample-ar'
             buildConfigField 'String', 'VR_PLATFORM', '"GVR"'
         }
-        ovr {
-            resValue 'string', 'app_name', 'ViroSample-ovr'
-            applicationIdSuffix '.ovr'
-            buildConfigField 'String', 'VR_PLATFORM', '"OVR_MOBILE"'
-        }
-    }
-    productFlavors {
         gvr {
             resValue 'string', 'app_name', 'ViroSample-gvr'
             buildConfigField 'String', 'VR_PLATFORM', '"GVR"'
@@ -187,6 +179,7 @@ dependencies {
     compile 'com.amazonaws:aws-android-sdk-ddb-mapper:2.2.+'
     compile 'com.amazonaws:aws-android-sdk-cognito:2.2.+'
     compile 'com.amazonaws:aws-android-sdk-cognitoidentityprovider:2.2.+'
+    compile project(':react-native-heading')
 }
 
 // Run this once to be able to run the application with BUCK

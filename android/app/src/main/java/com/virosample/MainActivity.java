@@ -1,6 +1,7 @@
 package com.virosample;
 
 import com.facebook.react.ReactActivity;
+import com.joshblour.reactnativeheading.ReactNativeHeadingPackage;
 
 public class MainActivity extends ReactActivity {
 
@@ -11,5 +12,13 @@ public class MainActivity extends ReactActivity {
     @Override
     protected String getMainComponentName() {
         return "ViroSample";
+    }
+
+    @Override
+    protected List<ReactPackage> getPackages() {
+        return Arrays.<ReactPackage>asList(
+            new MainReactPackage(),
+            new ReactNativeHeadingPackage() // <------ add the package
+        );
     }
 }
