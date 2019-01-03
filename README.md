@@ -4,7 +4,7 @@
 
 ### Step 1 - Clone & install repository
 ```bash
-git clone https://[YOUR LAST NAME]@scm.adesso.de/scm/git/adesso/JavaScript-AR
+git clone https://github.com/adessoAG/adesso-indoor-navigator
 npm install
 ```
 
