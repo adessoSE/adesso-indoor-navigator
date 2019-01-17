@@ -9,13 +9,13 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@zsajjad/react-native-heading": "https://github.com/zsajjad/react-native-heading.git",
     "firebase": "^5.3.0",
     "npm": "^5.8.0",
     "react": "16.6.1",
     "react-native": "0.57.7",
     "react-native-firebase": "^4.3.7",
     "react-native-geojson": "^0.1.1",
+    "react-native-heading": "^1.1.1",
     "react-native-maps": "^0.21.0",
     "react-native-modal-filter-picker": "https://github.com/parideis/react-native-modal-filter-picker.git",
     "react-viro": "2.13.0",

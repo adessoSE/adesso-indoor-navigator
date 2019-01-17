@@ -122,15 +122,15 @@ android {
             resValue 'string', 'app_name', 'ViroSample-ar'
             buildConfigField 'String', 'VR_PLATFORM', '"GVR"'
         }
-        gvr {
-            resValue 'string', 'app_name', 'ViroSample-gvr'
-            buildConfigField 'String', 'VR_PLATFORM', '"GVR"'
-        }
-        ovr {
-            resValue 'string', 'app_name', 'ViroSample-ovr'
-            applicationIdSuffix '.ovr'
-            buildConfigField 'String', 'VR_PLATFORM', '"OVR_MOBILE"'
-        }
+        // gvr {
+        //     resValue 'string', 'app_name', 'ViroSample-gvr'
+        //     buildConfigField 'String', 'VR_PLATFORM', '"GVR"'
+        // }
+        // ovr {
+        //     resValue 'string', 'app_name', 'ViroSample-ovr'
+        //     applicationIdSuffix '.ovr'
+        //     buildConfigField 'String', 'VR_PLATFORM', '"OVR_MOBILE"'
+        // }
     }
     buildTypes {
         release {
