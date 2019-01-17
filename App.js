@@ -19,7 +19,7 @@ import config from './config';
 import localStyles from './localStyles';
 
 // Device Heading
-import ReactNativeHeading from "@zsajjad/react-native-heading";
+import ReactNativeHeading from "react-native-heading";
 
 //
 // ─── LOGIN FORM ─────────────────────────────────────────────────────────────────
