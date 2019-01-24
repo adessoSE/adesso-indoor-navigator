@@ -15,9 +15,9 @@
     "react-native": "0.57.7",
     "react-native-firebase": "^4.3.7",
     "react-native-geojson": "^0.1.1",
-    "react-native-heading": "^1.1.1",
     "react-native-maps": "^0.21.0",
     "react-native-modal-filter-picker": "https://github.com/parideis/react-native-modal-filter-picker.git",
+    "react-native-sensors": "github:adessoAG/react-native-sensors#add-orientation",
     "react-viro": "2.13.0",
     "tcomb-form-native": "^0.6.15"
   },

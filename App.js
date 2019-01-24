@@ -19,7 +19,7 @@ import config from './config';
 import localStyles from './localStyles';
 
 // Device Heading
-import ReactNativeHeading from "react-native-heading";
+import ReactNativeHeading from "./js/ReactNativeSensorsAdapter";
 
 //
 // ─── LOGIN FORM ─────────────────────────────────────────────────────────────────
@@ -180,17 +180,28 @@ export default class ViroSample extends Component {
     let headings = [];
 
     if(ReactNativeHeading === undefined) {
-      // throw new Error('ReactNativeHeading may not be undefined!');
+      throw new Error('ReactNativeHeading may not be undefined!');
     }
 
-    this.headingListener = new NativeEventEmitter(ReactNativeHeading);
-    // ReactNativeHeading.start(1).then(didStart => {
-    //   this.setState({
-    //     headingIsSupported: didStart
-    //   });
-    // });
+    this.headingListener = Platform.select({
+      ios: new NativeEventEmitter(ReactNativeHeading),
+      android: DeviceEventEmitter,
+    });
 
     this.headingListener.addListener("headingUpdated", this.onHeadingUpdated);
+
+    ReactNativeHeading.start(1).then(didStart => {
+      this.setState({
+        headingIsSupported: didStart
+      });
+    });
+
+    ReactNativeHeading.onUpdate(update => {
+      this.onHeadingUpdated({
+        trueHeading: update.azimuth,
+        headingAccuracy: update.accuracy
+      });
+    });
   }
 
   onHeadingUpdated = heading => {
