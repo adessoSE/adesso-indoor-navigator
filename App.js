@@ -19,7 +19,7 @@ import config from './config';
 import localStyles from './localStyles';
 
 // Device Heading
-import ReactNativeHeading from "./js/ReactNativeSensorsAdapter";
+import {orientation, setUpdateIntervalForType, SensorTypes} from 'react-native-sensors';
 
 //
 // ─── LOGIN FORM ─────────────────────────────────────────────────────────────────
@@ -177,46 +177,28 @@ export default class ViroSample extends Component {
 
   createHeadingListener = () => {
     console.log("Creating HeadingListener");
-    let headings = [];
+    let orientationUpdateInterval = 400;
 
-    if(ReactNativeHeading === undefined) {
-      throw new Error('ReactNativeHeading may not be undefined!');
-    }
+    setUpdateIntervalForType(SensorTypes.orientation, orientationUpdateInterval);
 
-    this.headingListener = Platform.select({
-      ios: new NativeEventEmitter(ReactNativeHeading),
-      android: DeviceEventEmitter,
-    });
-
-    this.headingListener.addListener("headingUpdated", this.onHeadingUpdated);
-
-    ReactNativeHeading.start(1).then(didStart => {
-      this.setState({
-        headingIsSupported: didStart
-      });
-    });
-
-    ReactNativeHeading.onUpdate(update => {
+    this.headingListener = orientation.subscribe(update => {
       this.onHeadingUpdated({
         trueHeading: update.azimuth,
         headingAccuracy: update.accuracy
+      });
+
+      this.setState({
+        headingIsSupported: true
+      });
+    }, error => {
+      console.error(error);
+      this.setState({
+        headingIsSupported: false
       });
     });
   }
 
   onHeadingUpdated = heading => {
-    console.log(heading, heading.headingAccuracy, heading.trueHeading);
-    /* rewrote npm package to get headingAccuracy and trueHeading value */
-    /* /node_modules/@zsajjad/react-native-heading/ReactNativeHeading.m */
-    /*
-        _heading = @{
-      @"trueHeading": @(newHeading.trueHeading),
-      @"headingAccuracy": @(newHeading.headingAccuracy)
-      };
-
-      [self sendEventWithName:@"headingUpdated" body:(_heading)];
-   */
-
     if (this.state.headingAccuracy !== heading.headingAccuracy) {
       /* Heading accuracy changed  */
       this.setState(
@@ -293,12 +275,11 @@ export default class ViroSample extends Component {
 
   componentWillUnmount = () => {
     console.log("ComponentWillunmount");
-    //this.stopHeadingListener();
+    this.stopHeadingListener();
   }
 
   stopHeadingListener = () => {
-    ReactNativeHeading.stop();
-    this.headingListener.removeAllListeners("headingUpdated");
+    this.headingListener.unsubscribe();
   }
 
   getMarkers = () => {
