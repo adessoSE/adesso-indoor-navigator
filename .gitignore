@@ -1,6 +1,7 @@
 #User specific configuration
 config.js
-js/res/json/*
+js/res/json/floorplan_adesso.json
+js/res/json/Javascript2018_Arena.json
 
 # Test coverage data
 coverage/
