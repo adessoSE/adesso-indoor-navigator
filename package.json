@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
     "test": "jest --coverage",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "build-android": "babel-node -- ./buildAndroid.js"
   },
   "dependencies": {
     "firebase": "^5.3.0",
@@ -22,18 +23,17 @@
     "tcomb-form-native": "^0.6.15"
   },
   "devDependencies": {
+    "@babel/node": "^7.2.2",
     "babel-core": "^6.26.3",
     "babel-eslint": "^10.0.1",
     "babel-jest": "23.6.0",
     "babel-polyfill": "^6.26.0",
     "babel-preset-react-native": "4.0.0",
+    "commander": "^2.19.0",
     "eslint": "^5.9.0",
     "eslint-plugin-react": "^7.11.1",
-    "jest": "23.6.0",
+    "jest": "24.0.0",
     "metro-react-native-babel-preset": "0.51.1",
     "react-test-renderer": "16.6.1"
-  },
-  "jest": {
-    "preset": "react-native"
   }
 }
