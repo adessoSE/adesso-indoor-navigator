@@ -41,6 +41,13 @@ export const verifyDeviceIsAvailable = async (deviceId) => {
     return deviceIsAvailable;
 };
 
+export const runAdbReverse = async () => {
+    const command = 'adb reverse tcp:8081 tcp:8081';
+    console.log('Running `' + command + '`');
+    await exec(command);
+    console.log('Finished `' + command + '`');
+};
+
 export const startBundler = () => {
     console.log('Starting bundler');
     const bundlerProcess = spawn('node', [
@@ -82,15 +89,22 @@ export const buildApk = (deviceId) => new Promise((resolve, reject) => {
         '--no-packager'
     ]);
 
+    let buildWasSuccessful = true;
+
     buildProcess.stdout.setEncoding('utf8');
     buildProcess.stderr.setEncoding('utf8');
+    
+    const dataBelongsToKnownInstallationError = data => data.indexOf('app/build/outputs/apk/app-debug.apk') > -1;
 
     let warningHasBeenPrinted = false;
     const handleData = (data, loggingFunction) => {
-        if(data.indexOf('app/build/outputs/apk/app-debug.apk') > -1 && !warningHasBeenPrinted) {
-            console.warn(chalk.yellow('WARNING: There will be some error messages regarding the installation of ' +
-            'the APK. This Error is expected! If it is the only error, there is no need wo worry.'));
-            warningHasBeenPrinted = true;
+        if(dataBelongsToKnownInstallationError(data)) {
+            if(!warningHasBeenPrinted) {
+                console.warn(chalk.yellow('WARNING: There will be some error messages regarding the installation of ' +
+                'the APK. This Error is expected! If it is the only error, there is no need wo worry.'));
+                warningHasBeenPrinted = true;
+            }
+
             data = chalk.yellow(data);
         }
         
@@ -102,16 +116,22 @@ export const buildApk = (deviceId) => new Promise((resolve, reject) => {
     });
     
     buildProcess.stderr.on('data', (data) => {
-        handleData(data, console.error);
+        handleData(chalk.red(data), console.error);
+
+        if(!dataBelongsToKnownInstallationError(data)) {
+            buildWasSuccessful = false;
+        }
     });
     
     buildProcess.on('close', (code) => {
-        if(code === 0) {
+        //TODO add other expected errors
+        if(code === 0/* && buildWasSuccessful*/) {
             console.log('Build process exited with code ' + code);
             resolve();
         } else {
             console.log(chalk.red('Build process exited with code ' + code));
-            reject();
+            reject(new Error('Something went wrong during the build process. For further information, please ' +
+            'check previous log statements.'));
         }
     });
 
@@ -157,13 +177,15 @@ export const run = async (program) => {
             if(!program.noBuild) {
                 await buildApk(deviceId);
             } else {
-                console.log(chalk.yellow('Skipping build'));
+                console.log(chalk.yellow('Skipping build but running one task that is usually ' +
+                'taken over by the build'));
+                await runAdbReverse();
             }
             
             await installApk(deviceId);
             startBundler();
         } catch(e) {
-            console.error(e);
+            console.error(chalk.red(e));
         }
     }
 };
