@@ -94,11 +94,13 @@ export const buildApk = (deviceId) => new Promise((resolve, reject) => {
     buildProcess.stdout.setEncoding('utf8');
     buildProcess.stderr.setEncoding('utf8');
     
-    const dataBelongsToKnownInstallationError = data => data.indexOf('app/build/outputs/apk/app-debug.apk') > -1;
+    const dataBelongsToKnownInstallationErrors = data =>
+        data.indexOf('app/build/outputs/apk/app-debug.apk') > -1 ||
+        data.indexOf('Activity class {com.virosample/com.virosample.MainActivity} does not exist') > -1;
 
     let warningHasBeenPrinted = false;
     const handleData = (data, loggingFunction) => {
-        if(dataBelongsToKnownInstallationError(data)) {
+        if(dataBelongsToKnownInstallationErrors(data)) {
             if(!warningHasBeenPrinted) {
                 console.warn(chalk.yellow('WARNING: There will be some error messages regarding the installation of ' +
                 'the APK. This Error is expected! If it is the only error, there is no need wo worry.'));
@@ -118,14 +120,14 @@ export const buildApk = (deviceId) => new Promise((resolve, reject) => {
     buildProcess.stderr.on('data', (data) => {
         handleData(chalk.red(data), console.error);
 
-        if(!dataBelongsToKnownInstallationError(data)) {
+        if(!dataBelongsToKnownInstallationErrors(data)) {
             buildWasSuccessful = false;
         }
     });
     
     buildProcess.on('close', (code) => {
         //TODO add other expected errors
-        if(code === 0/* && buildWasSuccessful*/) {
+        if(code === 0 && buildWasSuccessful) {
             console.log('Build process exited with code ' + code);
             resolve();
         } else {
@@ -140,6 +142,11 @@ export const buildApk = (deviceId) => new Promise((resolve, reject) => {
     });
 });
 
+/**
+ * Installs APK on device and returns wether installation was successful or not
+ * @param {number} deviceId 
+ * @returns {boolean} True if installation was susccessful
+ */
 export const installApk = async (deviceId) => {
     console.log('Installing APK');
     const command = 'adb -s ' + deviceId +
@@ -148,10 +155,12 @@ export const installApk = async (deviceId) => {
     try {
         await exec(command);
         console.log('Installation successful');
+        return true;
     } catch(e) {
         if(e.stderr.indexOf('INSTALL_FAILED_ALREADY_EXISTS') > -1) {
             console.warn(chalk.red('Installation of the APK failed. Please uninstall the old APK and then run ' +
             '`npm build-android -- -n`'));
+            return false;
         } else {
             //Unknown error, which should be passed along to caller
             throw e;
@@ -182,8 +191,10 @@ export const run = async (program) => {
                 await runAdbReverse();
             }
             
-            await installApk(deviceId);
-            startBundler();
+            const installationWasSuccessful = await installApk(deviceId);
+            if(installationWasSuccessful) {
+                startBundler();
+            }
         } catch(e) {
             console.error(chalk.red(e));
         }
