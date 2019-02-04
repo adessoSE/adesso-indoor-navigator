@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
     "test": "jest --coverage",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "build-android": "babel-node -- ./buildAndroid.js"
   },
   "dependencies": {
     "firebase": "^5.3.0",
@@ -15,25 +16,25 @@
     "react-native": "0.57.7",
     "react-native-firebase": "^4.3.7",
     "react-native-geojson": "^0.1.1",
-    "react-native-heading": "^1.1.1",
     "react-native-maps": "^0.21.0",
     "react-native-modal-filter-picker": "https://github.com/parideis/react-native-modal-filter-picker.git",
+    "react-native-sensors": "github:adessoAG/react-native-sensors#add-orientation",
     "react-viro": "2.13.0",
     "tcomb-form-native": "^0.6.15"
   },
   "devDependencies": {
+    "@babel/node": "^7.2.2",
     "babel-core": "^6.26.3",
     "babel-eslint": "^10.0.1",
     "babel-jest": "23.6.0",
     "babel-polyfill": "^6.26.0",
     "babel-preset-react-native": "4.0.0",
+    "chalk": "^2.4.2",
+    "commander": "^2.19.0",
     "eslint": "^5.9.0",
     "eslint-plugin-react": "^7.11.1",
-    "jest": "23.6.0",
+    "jest": "24.0.0",
     "metro-react-native-babel-preset": "0.51.1",
     "react-test-renderer": "16.6.1"
-  },
-  "jest": {
-    "preset": "react-native"
   }
 }

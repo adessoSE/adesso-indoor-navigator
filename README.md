@@ -14,36 +14,32 @@ Now you need to configure your project to use your own Viro API key and your own
 #### WARNING
 The `config.js` is included in the `.gitignore` and will **not** be commited into your git repository. You must keep track of it **on your own**.
 
-### Step 3 - Edit and link ReactNativeHeading
-ReactNativeHeading figures out, what direction your device is heading and gives you that information, by default. This project also requires information about the accuracy of said information, so some files of the module need to be changed.
+### Step 3 - Create two more JSON files
+For data privacy reasons, we removed two JSON files from the repository. In order for the build to succeed, you will need to at least create these files:
 
-Navigate to `./node_modules/@zsajjad/react-native-heading/Reactnativeheading.m` and perform the following change:
+1. `./js/res/json/floorplan_adesso.json`
+2. `./js/res/json/Javascript2018_Arena.json`
 
-```diff
---- a/node_modules/@zsajjad/react-native-heading/Reactnativeheading.m
-+++ b/node_modules/@zsajjad/react-native-heading/Reactnativeheading.m
-@@ -61,72 +61,73@@
- - (void)locationManager:(CLLocationManager *)manager didUpdateHeading:(CLHeading *)newHeading {
-    if (newHeading.headingAccuracy < 0)
-        return;
-    
--   // Use the true heading if it is valid.
--   CLLocationDirection heading = ((newHeading.trueHeading > 0) ?
--                                  newHeading.trueHeading : newHeading.magneticHeading);
--   
--   [self sendEventWithName:@"headingUpdated" body:@(heading)];
-+  _heading = @{
-+   @"trueHeading": @(newHeading.trueHeading),
-+   @"headingAccuracy": @(newHeading.headingAccuracy)
-+   };
-+
-+   [self sendEventWithName:@"headingUpdated" body:(_heading)];
-}
+You can fill them with some content similar to their template files (`[...]_template.json`).
 
-@end
+**Hint:** You can generate some randomized JSON [here](https://www.json-generator.com/).
+
+### [Android only] Step 4 - Create `local.properties`
+In order for Gradle to be able to build the project, you need to create a `./android/local.properties` and fill it with
+```
+sdk.dir=[Path to your SDK folder]
 ```
 
-After modifying ReactNativeHeading, you need to follow [these instructions](https://github.com/zsajjad/react-native-heading/blob/master/README.md#setup) in order to link it to the rest of the project.
+For more information, please take a look at [this question on StackOverflow](https://stackoverflow.com/questions/20673378/where-does-local-properties-go-for-android-project/25318217).
+
+## Build and installation
+### Android
+1. Connect your phone to your computer via a USB cable
+2. Run `npm run build-android`. Once you see a box that sais "Running Metro Bundler..." you can open the app on your phone!
+To just install the latest development APK, just run `npm run build-android -- -n` (or `... -- --no-build`).
+
+### iOS
+Coming soon...
 
 ## Attributions
 ["Green Arrow Icon"](https://poly.google.com/view/7eaXP_9tC-e) by [Thomas Balouet](https://poly.google.com/user/3hZPO-XRoBS) is licensed under [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)

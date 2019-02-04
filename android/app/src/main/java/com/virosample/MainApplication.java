@@ -13,6 +13,8 @@ import com.viromedia.bridge.ReactViroPackage;
 import com.viromedia.bridge.ReactViroPackage;
 import com.facebook.soloader.SoLoader;
 
+import com.sensors.RNSensorsPackage;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -29,6 +31,7 @@ public class MainApplication extends Application implements ReactApplication {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
           new RNFirebasePackage(),
+          new RNSensorsPackage(),
           new ReactViroPackage(ReactViroPackage.ViroPlatform.valueOf(BuildConfig.VR_PLATFORM))
       );
     }
