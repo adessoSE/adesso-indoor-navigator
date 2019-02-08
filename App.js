@@ -89,7 +89,6 @@ const itemsRef = rootRef.child("branches");
 import ModalFilterPicker from "react-native-modal-filter-picker";
 
 import { ViroSceneNavigator, ViroARSceneNavigator } from "react-viro";
-import MapScene from "./js/MapScene";
 
 var sharedProps = config.viro;
 // Sets the default scene you want for AR and VR
@@ -475,12 +474,6 @@ export default class ViroSample extends Component {
       Login Failed. Make sure you are registered.
     </Text>
   )
-
-  testStuff = () => {
-    const markers = this.state.viroAppProps.currentMarkerCoordinates;
-    console.warn(JSON.stringify({USEMAP, markers}));
-    return true;
-  }
     
   render() {
     const { isSignedIn, startAR } = this.state;
@@ -497,17 +490,18 @@ export default class ViroSample extends Component {
             {this.createModalFilterPicker()}
             <ViroARSceneNavigator
               style={localStyles.arView}
-              {...this.state.sharedProps}
+              {...this.state.sharedProps} // sharedProps === config.viro: {apiKey, featuresMap}
               initialScene={{ scene: InitialARScene }}
               viroAppProps={this.state.viroAppProps}
             />
             {this.createScanButton()}
             {this.createDestinationButton()}
             {this.createDistanceText()}
-            {USEMAP && this.state.viroAppProps.currentMarkerCoordinates && this.testStuff() ? (
-              <MapScene
+            {/* TODO: Remove the "|| true" once the minimap feature is completed */}
+            {USEMAP && (this.state.viroAppProps.currentMarkerCoordinates || true) ? (
+              <Image
+                source={require('./assets/dortmund_4.png')}
                 style={localStyles.map}
-                viroAppProps={this.state.viroAppProps}
               />
             ) : null}
 

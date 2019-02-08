@@ -24,7 +24,9 @@ export const localStyles = StyleSheet.create({
       alignItems: "center",
       alignSelf: "flex-end",
       position: "absolute",
-      backgroundColor: "transparent"
+      backgroundColor: "transparent",
+      width: 1160 / 4.5,
+      height: 640 / 4.5 
     },
     inner: {
       flex: 1,
