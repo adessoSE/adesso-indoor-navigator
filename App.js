@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, Text } from 'react-native';
+import { View } from 'react-native';
 import { ViroARSceneNavigator } from 'react-viro';
 import { orientation, setUpdateIntervalForType, SensorTypes } from 'react-native-sensors';
 
@@ -11,23 +11,19 @@ import DestinationButton from './js/components/DestinationButton.component';
 import DistanceText from './js/components/DistanceText.component';
 import Indicator from './js/components/Indicator.component';
 import DebugCamera from './js/components/DebugCamera.component';
-import TestComponent from './js/components/TestComponent.component';
 import StartingScreen from './js/components/StartingScreen.component';
 import LoginFailedScreen from './js/components/LoginFailedScreen.component';
 import LoginForm from './js/components/LoginForm.component';
+import Minimap from './js/components/Minimap.component';
 import * as FirebaseTools from './js/components/FirebaseTools';
 import strings from './i18n/strings';
 
 // import MapScene from './js/MapScene';
 
-var sharedProps = {
-  apiKey: VIRO_API_KEY,
-};
-
-const USEMAP = false;
+const USEMAP = true;
 const InitialARScene = require('./js/Navigation');
 
-const defaultDestination = 'none';
+const defaultDestinationName = 'none';
 const defaultPauseUpdates = false;
 
 export default class ViroSample extends Component {
@@ -41,7 +37,6 @@ export default class ViroSample extends Component {
       locations: null,
       modalVisible: false,
       options: null,
-      sharedProps,
       userData: null,
       headingAccuracy: null,
       startAR: null,
@@ -49,7 +44,7 @@ export default class ViroSample extends Component {
         //featuresmap: config.viro.featuresMap,
         cameraPosition: [0, 0, 0],
         currentMarkerCoordinates: null,
-        destination: defaultDestination,
+        destinationName: defaultDestinationName,
         destinationLocation: null,
         heading: null,
         indicator: null,
@@ -62,20 +57,15 @@ export default class ViroSample extends Component {
         picked: null,
         position: [0, 0, 0], //actual relativ position regarding marker
         showPointCloud: true,
-        _getListData: this._getListData,
+        updateMarkerPositionInViroAppProps: this.updateMarkerPositionInViroAppProps,
+        _getListData: this._getListDataForLocation,
         _onCameraUpdate: this._onCameraUpdate,
-        _setMarkerID: this._setMarkerID,
+        _setMarkerID: this._onMarkerDetected,
         _getCameraPosition: this._getCameraPosition,
-        _getMarkerPosition: this._getMarkerPosition,
+        _getMarkerPosition: this.updateMarkerPositionInViroAppProps,
         _getPosition: this._getPosition
       }
     };
-  }
-
-  testrender() {
-    return (
-      <TestComponent viroAppProps={this.state.viroAppProps}></TestComponent>
-    );
   }
 
   createHeadingListener = () => {
@@ -99,6 +89,10 @@ export default class ViroSample extends Component {
         headingIsSupported: false
       });
     });
+  }
+
+  stopHeadingListener = () => {
+    this.headingListener.unsubscribe();
   }
 
   onHeadingUpdated = heading => {
@@ -179,19 +173,13 @@ export default class ViroSample extends Component {
   }
 
   componentWillUnmount = () => {
-    console.log('ComponentWillunmount');
+    console.log('Component will unmount');
     this.stopHeadingListener();
-  }
-
-  stopHeadingListener = () => {
-    this.headingListener.unsubscribe();
   }
 
   getMarkers = () => {
     const items = this.state.viroAppProps.items;
     let markers = [];
-
-    console.warn(items);
 
     /*
      * Saves coordinates of all markers by marker name + index.
@@ -261,7 +249,7 @@ export default class ViroSample extends Component {
 
             <ViroARSceneNavigator
               style={localStyles.arView}
-              {...this.state.sharedProps} // sharedProps === config.viro: {apiKey, featuresMap}
+              apiKey={VIRO_API_KEY}
               initialScene={{ scene: InitialARScene }}
               viroAppProps={this.state.viroAppProps}
             />
@@ -271,20 +259,20 @@ export default class ViroSample extends Component {
             />
 
             <DestinationButton
-              viroAppProps={this.state.viroAppProps}
+              destinationLocation={this.state.viroAppProps.destinationLocation}
+              destinationName={this.state.viroAppProps.destinationName}
               onPress={() => this.setState({ modalVisible: true })}
             />
 
             <DistanceText
-              destination={this.state.viroAppProps.destination}
+              destinationName={this.state.viroAppProps.destinationName}
               distance={this.state.distance}
             />
 
-            {/* {USEMAP && this.state.viroAppProps.currentMarkerCoordinates ? (
-              <MapScene
-                style={localStyles.map}
-              />
-            ) : null} */}
+            {/* TODO: Remove the "|| true" once the minimap feature is completed */}
+            {USEMAP && (this.state.viroAppProps.currentMarkerCoordinates || true) ? (
+              <Minimap />
+            ) : null}
 
             {/* Indicators */}
             <Indicator directions={this.state.indicator} />
@@ -312,8 +300,12 @@ export default class ViroSample extends Component {
     );
   }
 
-  onDestinationUpdate = (destination, destinationLocation) => {
-    this.setViroAppProps({ destination, destinationLocation });
+  onDestinationUpdate = (destinationName, destinationLocation) => {
+    this.setViroAppProps({
+      destinationName,
+      destination: destinationName,
+      destinationLocation
+    });
     this.setState({ modalVisible: false });
   }
 
@@ -323,15 +315,15 @@ export default class ViroSample extends Component {
     });
   }
 
-  _getListData = locationName => {
+  _getListDataForLocation = locationName => {
     /*  get locaiton list Data after scanned Marker (known location)  */
     const items = this.state.viroAppProps.items;
-    const locations = items.filter(item => item.name === locationName);
+    const locationsWithMatchingName = items.filter(item => item.name === locationName);
     let options = [];
     //TODO: replace with locations.length > 0
-    if (locations) {
+    if (locationsWithMatchingName) {
       /* push each poi name into options */
-      locations[0].pois.forEach(poi => {
+      locationsWithMatchingName[0].pois.forEach(poi => {
         options.push({
           key: poi.title,
           label: poi.title,
@@ -339,7 +331,7 @@ export default class ViroSample extends Component {
         });
       });
       this.setState({
-        locations: locations[0],
+        locations: locationsWithMatchingName[0],
         options: options
       });
     }
@@ -359,6 +351,7 @@ export default class ViroSample extends Component {
       (!this.state.modalVisible && distance < this.state.distance - 0.1) ||
       distance > this.state.distance + 0.1
     ) {
+      console.log(this.state.viroAppProps.cameraPosition);
       this.setState({
         distance: distance,
         indicator: indicator
@@ -387,12 +380,9 @@ export default class ViroSample extends Component {
     }
   }
 
-  _getMarkerPosition = position => {
-    this.setState({
-      viroAppProps: {
-        ...this.state.viroAppProps,
-        markerPosition: position
-      }
+  updateMarkerPositionInViroAppProps = newMarkerPosition => {
+    this.setViroAppProps({
+      markerPosition: newMarkerPosition
     });
   }
 
@@ -415,37 +405,26 @@ export default class ViroSample extends Component {
     }
   }
 
-  _setMarkerID = id => {
+  _onMarkerDetected = markerID => {
     /* Marker Found */
-    /* Check if new Marker is found */
-    if (id !== this.state.viroAppProps.markerID) {
+    /* Check if the marker is the same one as before */
+    if (markerID !== this.state.viroAppProps.markerID) {
       console.log('Set MarkerID & pauseUpdates true');
-      console.warn(
-        'This ID is: ',
-        id,
-        'and coords: ',
-        this.state.viroAppProps.markerCoordinates[id]
-      );
       this.setState({
         modalVisible: true,
         viroAppProps: {
           ...this.state.viroAppProps,
           currentMarkerCoordinates: this.state.viroAppProps.markerCoordinates[
-            id
+            markerID
           ],
-          markerID: id,
+          markerID: markerID,
           pauseUpdates: true,
           showPointCloud: false
         }
       });
     } else if (!this.state.viroAppProps.pauseUpdates) {
       console.log('Same marker. Set pauseUpdates true');
-      this.setState({
-        viroAppProps: {
-          ...this.state.viroAppProps,
-          pauseUpdates: true
-        }
-      });
+      this.setViroAppProps({ pauseUpdates: true });
     }
   }
 }

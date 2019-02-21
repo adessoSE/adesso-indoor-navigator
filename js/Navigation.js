@@ -69,7 +69,8 @@ var Navigation = createReactClass({
         _setMarkerID: PropTypes.func,
         _getCameraPosition: PropTypes.func,
         _getMarkerPosition: PropTypes.func,
-        _onCameraUpdate: PropTypes.func
+        _onCameraUpdate: PropTypes.func,
+        updateMarkerPositionInViroAppProps: PropTypes.func
       }
     }
   }),
@@ -205,7 +206,7 @@ var Navigation = createReactClass({
           key={targetname}
         >
           {/* Get position and scale from DB */}
-          {this.props.arSceneNavigator.viroAppProps.destination !== 'none'
+          {this.props.arSceneNavigator.viroAppProps.destinationName !== 'none'
             ? this._getPOIModel(
                 targetname,
                 Object.values(marker.offset.position),
@@ -240,7 +241,7 @@ var Navigation = createReactClass({
             />
             {/* Set POI from viroAppProps */}
             {this._set3DPOI(
-              this.props.arSceneNavigator.viroAppProps.destination,
+              this.props.arSceneNavigator.viroAppProps.destinationName,
               this.props.arSceneNavigator.viroAppProps.destinationLocation
                 .position,
               this.props.arSceneNavigator.viroAppProps.destinationLocation.scale
@@ -254,7 +255,7 @@ var Navigation = createReactClass({
   },
 
   _set3DPOI(name, position, scale) {
-    if (this.props.arSceneNavigator.viroAppProps.destination === name) {
+    if (this.props.arSceneNavigator.viroAppProps.destinationName === name) {
       return (
         <ViroNode
           position={Object.values(position)}
@@ -305,7 +306,7 @@ var Navigation = createReactClass({
   _getCamera() {
     //console.log('Getting Camera');
     this._getDestinationObject(
-      this.props.arSceneNavigator.viroAppProps.destination
+      this.props.arSceneNavigator.viroAppProps.destinationName
     );
     /* Get Camera Object */
     this.refs['arscene'].getCameraOrientationAsync().then(orientation => {
@@ -318,7 +319,7 @@ var Navigation = createReactClass({
       );
       if (markerID !== 0 && !markerPosSet && Camera.position) {
         markerPosSet = true;
-        this.props.arSceneNavigator.viroAppProps._getMarkerPosition(
+        this.props.arSceneNavigator.viroAppProps.updateMarkerPositionInViroAppProps(
           Camera.position
         );
       }
@@ -419,23 +420,6 @@ var Navigation = createReactClass({
     return result;
   }
 });
-
-// Navigation.propTypes = {
-//   arSceneNavigator: {
-//     viroAppProps: {
-//       markers: PropTypes.array,
-//       showPointCloud: PropTypes.bool,
-//       pauseUpdates: PropTypes.bool,
-//       destination: PropTypes.any,
-//       destinationLocation: PropTypes.any,
-//       _getListData: PropTypes.func,
-//       _setMarkerID: PropTypes.func,
-//       _getCameraPosition: PropTypes.func,
-//       _getMarkerPosition: PropTypes.func,
-//       _onCameraUpdate: PropTypes.func
-//     }
-//   }
-// };
 
 //
 // ─── CREATE TARGETS ─────────────────────────────────────────────────────────────

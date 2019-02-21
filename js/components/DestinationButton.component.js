@@ -4,8 +4,8 @@ import { TouchableHighlight, Text, View } from 'react-native';
 import { localStyles } from '../../localStyles';
 import PropTypes from 'prop-types';
 
-const DestinationButton = ({ viroAppProps, onPress }) => {
-  if (viroAppProps.destinationLocation) {
+const DestinationButton = ({ destinationLocation, destinationName, onPress }) => {
+  if (destinationLocation) {
     return (
       <View
         style={{
@@ -22,8 +22,8 @@ const DestinationButton = ({ viroAppProps, onPress }) => {
           underlayColor={'#68a0ff'}
         >
           <Text style={localStyles.buttonText}>
-            {viroAppProps.destination !== 'none'
-              ? `Destination: ${viroAppProps.destination}`
+            {destinationName !== 'none'
+              ? `Destination: ${destinationName}`
               : 'Choose Destination'}
           </Text>
         </TouchableHighlight>
@@ -35,7 +35,8 @@ const DestinationButton = ({ viroAppProps, onPress }) => {
 };
 
 DestinationButton.propTypes = {
-  viroAppProps: PropTypes.object,
+  destinationLocation: PropTypes.any,
+  destinationName: PropTypes.any,
   onPress: PropTypes.func
 };
 

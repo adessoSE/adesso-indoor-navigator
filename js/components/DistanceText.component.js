@@ -4,10 +4,10 @@ import PropTypes from 'prop-types';
 
 import { localStyles } from '../../localStyles';
 
-const DistanceText = ({ destination, distance }) => {
+const DistanceText = ({ destinationName, distance }) => {
   let text = '';
 
-  if (destination !== 'none') {
+  if (destinationName !== 'none') {
     text = distance !== 0 ? `Distance: ${distance} m` : 'Please scan a marker!';
   }
   
@@ -31,7 +31,7 @@ const DistanceText = ({ destination, distance }) => {
 DistanceText.propTypes = {
   viroAppProps: PropTypes.object,
   distance: PropTypes.number,
-  destination: PropTypes.any
+  destinationName: PropTypes.any
 };
 
 export default DistanceText;
