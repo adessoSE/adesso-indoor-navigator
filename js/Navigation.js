@@ -66,7 +66,7 @@ var Navigation = createReactClass({
         destination: PropTypes.any,
         destinationLocation: PropTypes.any,
         _getListData: PropTypes.func,
-        _setMarkerID: PropTypes.func,
+        onMarkerDetected: PropTypes.func,
         setNewCameraPosition: PropTypes.func,
         setDistanceAndIndicatorDirections: PropTypes.func,
         setNewMarkerPosition: PropTypes.func
@@ -289,14 +289,14 @@ var Navigation = createReactClass({
   _onAnchorFound(name, location) {
     markerID = name;
     this.props.arSceneNavigator.viroAppProps._getListData(location);
-    this.props.arSceneNavigator.viroAppProps._setMarkerID(name);
+    this.props.arSceneNavigator.viroAppProps.onMarkerDetected(name);
   },
 
   /* On Anchor Updated */
   _onAnchorUpdated(name) {
     markerID = name;
     this._getDestinationObject();
-    this.props.arSceneNavigator.viroAppProps._setMarkerID(name);
+    this.props.arSceneNavigator.viroAppProps.onMarkerDetected(name);
     markerPosSet = false;
   },
 

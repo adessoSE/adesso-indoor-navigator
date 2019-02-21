@@ -61,7 +61,7 @@ export default class ViroSample extends Component {
         showPointCloud: true,
         _getListData: this._getListDataForLocation,
         setDistanceAndIndicatorDirections: this.setDistanceAndIndicatorDirections,
-        _setMarkerID: this._onMarkerDetected,
+        onMarkerDetected: this.onMarkerDetected,
         setNewCameraPosition: this.setNewCameraPosition,
         setNewMarkerPosition: this.setNewMarkerPosition,
       }
@@ -357,25 +357,22 @@ export default class ViroSample extends Component {
     }
   }
 
-  _onMarkerDetected = markerID => {
-    /* Marker Found */
+  onMarkerDetected = markerID => {
     /* Check if the marker is the same one as before */
     if (markerID !== this.state.viroAppProps.markerID) {
-      console.log('Set MarkerID & pauseUpdates true');
-      this.setState({
-        modalVisible: true,
-        viroAppProps: {
-          ...this.state.viroAppProps,
-          currentMarkerCoordinates: this.state.viroAppProps.markerCoordinates[
-            markerID
-          ],
-          markerID: markerID,
-          pauseUpdates: true,
-          showPointCloud: false
-        }
+      console.log('Marker with ID ' + markerID + ' detected.');
+
+      this.setState({ modalVisible: true });
+      this.setViroAppProps({
+        currentMarkerCoordinates: this.state.viroAppProps.markerCoordinates[
+          markerID
+        ],
+        markerID: markerID,
+        pauseUpdates: true,
+        showPointCloud: false
       });
     } else if (!this.state.viroAppProps.pauseUpdates) {
-      console.log('Same marker. Set pauseUpdates true');
+      console.log('Same marker found as before, will stop looking for markers');
       this.setViroAppProps({ pauseUpdates: true });
     }
   }
