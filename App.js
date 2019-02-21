@@ -16,7 +16,6 @@ import LoginFailedScreen from './js/components/LoginFailedScreen.component';
 import LoginForm from './js/components/LoginForm.component';
 import Minimap from './js/components/Minimap.component';
 import * as FirebaseTools from './js/components/FirebaseTools';
-import strings from './i18n/strings';
 
 // import MapScene from './js/MapScene';
 
@@ -75,21 +74,24 @@ export default class ViroSample extends Component {
 
     setUpdateIntervalForType(SensorTypes.orientation, orientationUpdateInterval);
 
-    this.headingListener = orientation.subscribe(update => {
-      this.onHeadingUpdated({
-        trueHeading: update.azimuth,
-        headingAccuracy: update.accuracy
-      });
+    this.headingListener = orientation.subscribe(
+      update => {
+        this.onHeadingUpdated({
+          trueHeading: update.azimuth,
+          headingAccuracy: update.accuracy
+        });
 
-      this.setState({
-        headingIsSupported: true
-      });
-    }, error => {
-      console.error(error);
-      this.setState({
-        headingIsSupported: false
-      });
-    });
+        this.setState({
+          headingIsSupported: true
+        });
+      },
+      error => {
+        console.error(error);
+        this.setState({
+          headingIsSupported: false
+        });
+      }
+    );
   }
 
   stopHeadingListener = () => {
@@ -99,32 +101,14 @@ export default class ViroSample extends Component {
   onHeadingUpdated = heading => {
     if (this.state.headingAccuracy !== heading.headingAccuracy) {
       /* Heading accuracy changed  */
-      this.setState(
-        {
-          headingAccuracy: heading.headingAccuracy
-        },
-        () => {
-          console.log('headingAccuracy set to ' + this.state.headingAccuracy);
-        }
-      );
+      this.setState({ headingAccuracy: heading.headingAccuracy });
     }
 
     /* set Heading when user wants to start OR if Accuracy is good*/
     if (this.state.startAR || heading.headingAccuracy <= 20) {
+      this.setViroAppProps({ heading: heading.trueHeading });
       console.log('Stopping HeadingListener');
       this.stopHeadingListener();
-      /* Accurate Heading found */
-      this.setState(
-        {
-          viroAppProps: {
-            ...this.state.viroAppProps,
-            heading: heading.trueHeading
-          }
-        },
-        () => {
-          console.log('Heading set to ' + this.state.viroAppProps.heading);
-        }
-      );
     }
   }
 
@@ -133,13 +117,7 @@ export default class ViroSample extends Component {
     this.createHeadingListener();
 
     /* Logout at start */
-    // firebase
-    //   .auth()
-    //   .signOut()
-    //   .then(() => {
-    //     console.log('Logged out');
-    //   })
-    //   .catch(error => console.log('error'));
+    // FirebaseTools.logOutOf(this.state.firebaseApp);
 
     /* Firebase get Data after login */
     this.state.firebaseApp.auth().onAuthStateChanged(user => {
@@ -157,17 +135,7 @@ export default class ViroSample extends Component {
         itemsRef.on('value', snapshot => {
           let data = snapshot.val();
           let items = Object.values(data);
-          this.setState(
-            {
-              viroAppProps: {
-                ...this.state.viroAppProps,
-                items: items
-              }
-            },
-            () => {
-              this.getMarkers();
-            }
-          );
+          this.setViroAppProps({ items: items }, this.getMarkers);
         });
       }
     });
@@ -217,12 +185,13 @@ export default class ViroSample extends Component {
     });
   }
 
-  setViroAppProps = (newProps) => {
+  setViroAppProps = (newProps, callback = () => {}) => {
     this.setState({
       viroAppProps: {
         ...this.state.viroAppProps,
         ...newProps
-      }
+      },
+      callback
     });
   }
 
