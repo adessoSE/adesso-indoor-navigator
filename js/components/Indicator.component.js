@@ -66,7 +66,7 @@ const Indicator = ({ directions }) => {
 };
 
 Indicator.propTypes = {
-  indicator: PropTypes.array,
+  directions: PropTypes.array,
 };
 
 export default Indicator;

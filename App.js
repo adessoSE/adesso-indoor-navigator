@@ -61,7 +61,7 @@ export default class ViroSample extends Component {
         position: [0, 0, 0], //actual relativ position regarding marker
         showPointCloud: true,
         _getListData: this._getListDataForLocation,
-        _onCameraUpdate: this._onCameraUpdate,
+        setDistanceAndIndicatorDirections: this.setDistanceAndIndicatorDirections,
         _setMarkerID: this._onMarkerDetected,
         setNewCameraPosition: this.setNewCameraPosition,
         setNewMarkerPosition: this.setNewMarkerPosition,
@@ -338,24 +338,13 @@ export default class ViroSample extends Component {
     }
   }
 
-  _toggleDetection = () => {
-    this.setState({
-      viroAppProps: {
-        ...this.state.viroAppProps,
-        pauseUpdates: false
-      }
-    });
-  }
+  setDistanceAndIndicatorDirections = (newDistance, newIndicatorDirections) => {
+    const distanceDifference = Math.abs(newDistance - this.state.distance);
 
-  _onCameraUpdate = (distance, indicator) => {
-    if (
-      (!this.state.modalVisible && distance < this.state.distance - 0.1) ||
-      distance > this.state.distance + 0.1
-    ) {
-      console.log(this.state.viroAppProps.cameraPosition);
+    if (!this.state.modalVisible && distanceDifference > 0.1) {
       this.setState({
-        distance: distance,
-        indicator: indicator
+        distance: newDistance,
+        indicator: newIndicatorDirections
       });
     }
   }

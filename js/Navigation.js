@@ -68,7 +68,7 @@ var Navigation = createReactClass({
         _getListData: PropTypes.func,
         _setMarkerID: PropTypes.func,
         setNewCameraPosition: PropTypes.func,
-        _onCameraUpdate: PropTypes.func,
+        setDistanceAndIndicatorDirections: PropTypes.func,
         setNewMarkerPosition: PropTypes.func
       }
     }
@@ -326,7 +326,7 @@ var Navigation = createReactClass({
 
     /* Send Distance to RN App */
     if (Camera && DestinationObj) {
-      this.props.arSceneNavigator.viroAppProps._onCameraUpdate(
+      this.props.arSceneNavigator.viroAppProps.setDistanceAndIndicatorDirections(
         Math.round(
           this._distance(Camera.position, DestinationObj.position) * 100
         ) / 100,
