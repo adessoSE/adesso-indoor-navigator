@@ -190,9 +190,8 @@ export default class ViroSample extends Component {
       viroAppProps: {
         ...this.state.viroAppProps,
         ...newProps
-      },
-      callback
-    });
+      }
+    }, callback);
   }
 
   render() {
