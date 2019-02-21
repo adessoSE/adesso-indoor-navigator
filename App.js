@@ -63,8 +63,8 @@ export default class ViroSample extends Component {
         _getListData: this._getListDataForLocation,
         _onCameraUpdate: this._onCameraUpdate,
         _setMarkerID: this._onMarkerDetected,
-        _getCameraPosition: this._getCameraPosition,
-        updateMarkerPositionInViroAppProps: this.updateMarkerPositionInViroAppProps,
+        setNewCameraPosition: this.setNewCameraPosition,
+        setNewMarkerPosition: this.setNewMarkerPosition,
       }
     };
   }
@@ -360,28 +360,27 @@ export default class ViroSample extends Component {
     }
   }
 
-  _getCameraPosition = position => {
-    /* set new Position if there is a significant difference */
-    const newpos = position.reduce(
-      (accumulator, currentValue) => accumulator + currentValue
-    );
-    const oldpos = this.state.viroAppProps.cameraPosition.reduce(
-      (accumulator, currentValue) => accumulator + currentValue
-    );
+  setNewCameraPosition = newCameraPosition => {
+    const add = (a, b) => a + b;
+
+    // TODO this calculates the sum of all differences on all the axes
+    // instead of the distance between the to positions. This might
+    // be intentional, but it might also be a bug.
+    const newpos = newCameraPosition.reduce(add);
+    const oldpos = this.state.viroAppProps.cameraPosition.reduce(add);
     const diff = newpos - oldpos;
-    if (diff < -0.1 || diff > 0.1) {
+        
+    /* set new Position if there is a significant difference */
+    if (Math.abs(diff) < 0.1) {
       console.log('Set new cameraPosition');
-      this.setState({
-        viroAppProps: {
-          ...this.state.viroAppProps,
-          cameraPosition: position,
-          position: this.getCameraPositionRelativeToMarker()
-        }
+      this.setViroAppProps({
+        cameraPosition: newCameraPosition,
+        position: this.getCameraPositionRelativeToMarker()
       });
     }
   }
 
-  updateMarkerPositionInViroAppProps = newMarkerPosition => {
+  setNewMarkerPosition = newMarkerPosition => {
     this.setViroAppProps({
       markerPosition: newMarkerPosition
     });
