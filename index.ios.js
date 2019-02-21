@@ -9,7 +9,7 @@ require('core-js/fn/map');
 require('core-js/fn/set');
 require('core-js/fn/array/find');
 
-AppRegistry.registerComponent('ViroSample', () => App);
+AppRegistry.registerComponent('adessoIndoorNavigator', () => App);
 
 // The below line is necessary for use with the TestBed App
 AppRegistry.registerComponent('ViroSample', () => App);

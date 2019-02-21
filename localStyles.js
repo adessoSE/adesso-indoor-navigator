@@ -112,4 +112,4 @@ export const localStyles = StyleSheet.create({
     }
   });
 
-  export default localStyles;
+export default localStyles;

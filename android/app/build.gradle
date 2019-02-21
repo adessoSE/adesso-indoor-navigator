@@ -99,7 +99,7 @@ android {
     flavorDimensions "platform"
 
     defaultConfig {
-        applicationId "com.virosample"
+        applicationId "com.adessoindoornavigator"
         minSdkVersion 23
         targetSdkVersion 28
         multiDexEnabled true
@@ -119,18 +119,18 @@ android {
     }
     productFlavors {
         ar {
-            resValue 'string', 'app_name', 'ViroSample-ar'
+            resValue 'string', 'app_name', 'adessoIndoorNavigator-ar'
+            buildConfigField 'String', 'VR_PLATFORM', '"GVR"' //default to GVR
+        }
+        gvr {
+            resValue 'string', 'app_name', 'adessoIndoorNavigator-gvr'
             buildConfigField 'String', 'VR_PLATFORM', '"GVR"'
         }
-        // gvr {
-        //     resValue 'string', 'app_name', 'ViroSample-gvr'
-        //     buildConfigField 'String', 'VR_PLATFORM', '"GVR"'
-        // }
-        // ovr {
-        //     resValue 'string', 'app_name', 'ViroSample-ovr'
-        //     applicationIdSuffix '.ovr'
-        //     buildConfigField 'String', 'VR_PLATFORM', '"OVR_MOBILE"'
-        // }
+        ovr {
+            resValue 'string', 'app_name', 'adessoIndoorNavigator-ovr'
+            applicationIdSuffix '.ovr'
+            buildConfigField 'String', 'VR_PLATFORM', '"OVR_MOBILE"'
+        }
     }
     buildTypes {
         release {
@@ -154,7 +154,6 @@ android {
 }
 
 dependencies {
-    implementation project(':react-native-firebase')
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.android.support:appcompat-v7:28.0.0'
     implementation 'com.facebook.react:react-native:+'

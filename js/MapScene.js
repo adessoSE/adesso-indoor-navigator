@@ -7,31 +7,24 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
-import React, { Component } from "react";
-import {} from "../";
-import { PROVIDER_GOOGLE, PROVIDER_DEFAULT } from "react-native-maps";
+import React, { Component } from 'react';
+import {} from '../';
 import MapView, {
-  MAP_TYPES,
+  PROVIDER_DEFAULT,
   ProviderPropType,
   Marker
-} from "react-native-maps";
+} from 'react-native-maps';
 import PropTypes from 'prop-types';
-import Geojson from "react-native-geojson";
-import StandMarker from "./StandMarker";
-import user from "./res/user.png";
+import Geojson from 'react-native-geojson';
+import StandMarker from './StandMarker';
+import user from './res/user.png';
 import {
-  WebView,
   Dimensions,
-  AppRegistry,
-  Text,
   View,
-  StyleSheet,
-  PixelRatio,
-  TouchableHighlight,
-  Image
-} from "react-native";
+  StyleSheet
+} from 'react-native';
 
-const { width, height } = Dimensions.get("window");
+const { width, height } = Dimensions.get('window');
 
 const ASPECT_RATIO = width / height;
 export const LATITUDE = 51.50427;
@@ -39,8 +32,8 @@ export const LONGITUDE = 7.52738;
 export const LATITUDE_DELTA = 0.0002;
 export const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
 
-var floorplan = require("./res/json/floorplan_adesso.json"); //geojson data
-export let types = ["Zimmer", "Toilette", "Aufzug", "Treppe", "Platz", "Technikhause"]; //predefined types of romms
+var floorplan = require('./res/json/floorplan_adesso.json'); //geojson data
+export let types = ['Zimmer', 'Toilette', 'Aufzug', 'Treppe', 'Platz', 'Technikhause']; //predefined types of romms
 /* const LATITUDE_1 = 52.49662;
 const LONGITUDE_1 = 13.454077;
  */
@@ -52,16 +45,14 @@ const LONGITUDE_1 = 6.9696;
 export const LATITUDE_1 = 51.05799077414861;
 export const LONGITUDE_1 = 6.944936513900757;
 
-var floorplan_1 = require("./res/json/Javascript2018_Arena.json"); //geojson data
-
 export const geojson_template = {
-  type: "FeatureCollection",
+  type: 'FeatureCollection',
   features: [
     {
-      type: "Feature",
+      type: 'Feature',
       properties: {},
       geometry: {
-        type: "MultiPolygon",
+        type: 'MultiPolygon',
         coordinates: []
       }
     }
@@ -156,8 +147,8 @@ export default class MapScene extends Component {
           /* TODO: replace floorplan with viroAppprop */}
           <Geojson
             geojson={floorplan}
-            fillColor={"#6304c2"}
-            strokeColor={"#555555"}
+            fillColor={'#6304c2'}
+            strokeColor={'#555555'}
           />
           {/* Set User Marker */}
           {/* Get Marker Coordinates from viroAppProps */}
@@ -169,7 +160,7 @@ export default class MapScene extends Component {
                 y: -this.props.viroAppProps.position[2]
               }
             )}
-            identifier="User"
+            identifier='User'
             image={user}
             style={{ width: 25, height: 25 }}
           />
@@ -217,20 +208,22 @@ export default class MapScene extends Component {
 
 MapScene.propTypes = {
   provider: ProviderPropType,
-  viroAppProps: {
+  // TODO: define correct propTypes
+  /* viroAppProps: {
     currentMarkerCoordinates: PropTypes.array,
     position: PropTypes.array,
     heading: PropTypes.any,
     featuresmap: PropTypes.any
-  },
+  }, */
+  viroAppProps: PropTypes.any,
   style: PropTypes.any
 };
 
 export const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
-    justifyContent: "flex-end",
-    alignItems: "center"
+    justifyContent: 'flex-end',
+    alignItems: 'center'
   },
   map: {
     width: 150,
@@ -238,35 +231,35 @@ export const styles = StyleSheet.create({
     borderRadius: 75
   },
   bubble: {
-    backgroundColor: "rgba(255,255,255,0.7)",
+    backgroundColor: 'rgba(255,255,255,0.7)',
     paddingHorizontal: 18,
     paddingVertical: 12,
     borderRadius: 20
   },
   latlng: {
     width: 200,
-    alignItems: "stretch"
+    alignItems: 'stretch'
   },
   button: {
     width: 100,
     paddingHorizontal: 8,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     marginHorizontal: 5
   },
   buttonContainer: {
-    flexDirection: "row",
+    flexDirection: 'row',
     marginVertical: 20,
-    backgroundColor: "transparent"
+    backgroundColor: 'transparent'
   },
   buttonText: {
-    textAlign: "center"
+    textAlign: 'center'
   },
   text: {
     paddingTop: 30,
     paddingBottom: 20,
-    color: "#fff",
-    textAlign: "center",
+    color: '#fff',
+    textAlign: 'center',
     fontSize: 10
   }
 });
