@@ -68,7 +68,6 @@ var Navigation = createReactClass({
         _getListData: PropTypes.func,
         _setMarkerID: PropTypes.func,
         _getCameraPosition: PropTypes.func,
-        _getMarkerPosition: PropTypes.func,
         _onCameraUpdate: PropTypes.func,
         updateMarkerPositionInViroAppProps: PropTypes.func
       }

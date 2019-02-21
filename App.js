@@ -40,8 +40,11 @@ export default class ViroSample extends Component {
       userData: null,
       headingAccuracy: null,
       startAR: null,
+
+      // viroAppProps are used partially to pass information along to Viro React, but the object is also passed along
+      // from Viro to other components, such as Navigation.js. In other words, this object is also used to pass
+      // data to components, other than those from Viro React.
       viroAppProps: {
-        //featuresmap: config.viro.featuresMap,
         cameraPosition: [0, 0, 0],
         currentMarkerCoordinates: null,
         destinationName: defaultDestinationName,
@@ -57,13 +60,11 @@ export default class ViroSample extends Component {
         picked: null,
         position: [0, 0, 0], //actual relativ position regarding marker
         showPointCloud: true,
-        updateMarkerPositionInViroAppProps: this.updateMarkerPositionInViroAppProps,
         _getListData: this._getListDataForLocation,
         _onCameraUpdate: this._onCameraUpdate,
         _setMarkerID: this._onMarkerDetected,
         _getCameraPosition: this._getCameraPosition,
-        _getMarkerPosition: this.updateMarkerPositionInViroAppProps,
-        _getPosition: this._getPosition
+        updateMarkerPositionInViroAppProps: this.updateMarkerPositionInViroAppProps,
       }
     };
   }
@@ -374,7 +375,7 @@ export default class ViroSample extends Component {
         viroAppProps: {
           ...this.state.viroAppProps,
           cameraPosition: position,
-          position: this._getPosition()
+          position: this.getCameraPositionRelativeToMarker()
         }
       });
     }
@@ -386,22 +387,16 @@ export default class ViroSample extends Component {
     });
   }
 
-  _getPosition = () => {
-    if (
-      this.state.viroAppProps.markerPosition &&
-      this.state.viroAppProps.cameraPosition
-    ) {
-      let position = [
-        this.state.viroAppProps.cameraPosition[0] -
-          this.state.viroAppProps.markerPosition[0],
+  getCameraPositionRelativeToMarker = () => {
+    const markerPosition = this.state.viroAppProps.markerPosition;
+    const cameraPosition = this.state.viroAppProps.cameraPosition;
 
-        this.state.viroAppProps.cameraPosition[1] -
-          this.state.viroAppProps.markerPosition[1],
-
-        this.state.viroAppProps.cameraPosition[2] -
-          this.state.viroAppProps.markerPosition[2]
+    if (markerPosition && cameraPosition) {
+      return [
+        cameraPosition[0] - markerPosition[0],
+        cameraPosition[1] - markerPosition[1],
+        cameraPosition[2] - markerPosition[2]
       ];
-      return position;
     }
   }
 
