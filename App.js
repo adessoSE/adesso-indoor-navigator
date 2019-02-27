@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { ViroARSceneNavigator } from 'react-viro';
 import { orientation, setUpdateIntervalForType, SensorTypes } from 'react-native-sensors';
 
-import { VIRO_API_KEY } from 'react-native-dotenv';
+import { VIRO_API_KEY, VIRO_FEATURES_MAP } from 'react-native-dotenv';
 import { localStyles } from './localStyles';
 import ModalFilterPicker from './js/components/ModalFilterPicker.component';
 import ScanButton from './js/components/ScanButton.component';
@@ -14,7 +14,8 @@ import DebugCamera from './js/components/DebugCamera.component';
 import StartingScreen from './js/components/StartingScreen.component';
 import LoginFailedScreen from './js/components/LoginFailedScreen.component';
 import LoginForm from './js/components/LoginForm.component';
-import Minimap from './js/components/Minimap.component';
+// import Minimap from './js/components/Minimap.component';
+import MapScene from './js/MapScene';
 import * as FirebaseTools from './js/components/FirebaseTools';
 
 // import MapScene from './js/MapScene';
@@ -44,11 +45,17 @@ export default class ViroSample extends Component {
       // from Viro to other components, such as Navigation.js. In other words, this object is also used to pass
       // data to components, other than those from Viro React.
       viroAppProps: {
+        featuresmap: VIRO_FEATURES_MAP,
         cameraPosition: [0, 0, 0],
         currentMarkerCoordinates: null,
         destinationName: defaultDestinationName,
         destinationLocation: null,
+        
+        // heading is set exactly once immediately before AR is started, so it contains the device's heading
+        // when the coordinate system was set. In other words, this angle (deg, not rad) is used to translate
+        // viro data to latitude and longitude
         heading: null,
+
         indicator: null,
         items: null,
         markerCoordinates: null,
@@ -176,15 +183,17 @@ export default class ViroSample extends Component {
       }
     });
 
-    this.setState({
-      viroAppProps: {
-        ...this.state.viroAppProps,
-        markers: markers,
-        markerCoordinates: coordsObj
-      }
+    this.setViroAppProps({
+      markers: markers,
+      markerCoordinates: coordsObj
     });
   }
 
+  /**
+   * Sets attributes of state.viroAppProps.
+   * @param [object] newProps - Object containing the properties to be set
+   * @param [function] callback
+   */
   setViroAppProps = (newProps, callback = () => {}) => {
     this.setState({
       viroAppProps: {
@@ -240,7 +249,15 @@ export default class ViroSample extends Component {
 
             {/* TODO: Remove the "|| true" once the minimap feature is completed */}
             {USEMAP && (this.state.viroAppProps.currentMarkerCoordinates || true) ? (
-              <Minimap />
+              // <Minimap
+                
+              // />
+              <MapScene
+                heading={this.state.viroAppProps.heading}
+                featuresMap={this.state.viroAppProps.featuresmap}
+                currentMarkerCoordinates={this.state.viroAppProps.currentMarkerCoordinates}
+                position={this.state.viroAppProps.position}
+              />
             ) : null}
 
             {/* Indicators */}
@@ -318,18 +335,17 @@ export default class ViroSample extends Component {
   }
 
   setNewCameraPosition = newCameraPosition => {
-    const add = (a, b) => a + b;
+    const addValues = (a, b) => a + b;
 
     // TODO this calculates the sum of all differences on all the axes
     // instead of the distance between the to positions. This might
     // be intentional, but it might also be a bug.
-    const newpos = newCameraPosition.reduce(add);
-    const oldpos = this.state.viroAppProps.cameraPosition.reduce(add);
+    const newpos = newCameraPosition.reduce(addValues);
+    const oldpos = this.state.viroAppProps.cameraPosition.reduce(addValues);
     const diff = newpos - oldpos;
         
     /* set new Position if there is a significant difference */
     if (Math.abs(diff) < 0.1) {
-      console.log('Set new cameraPosition');
       this.setViroAppProps({
         cameraPosition: newCameraPosition,
         position: this.getCameraPositionRelativeToMarker()
@@ -361,6 +377,7 @@ export default class ViroSample extends Component {
     if (markerID !== this.state.viroAppProps.markerID) {
       console.log('Marker with ID ' + markerID + ' detected.');
 
+      // Show dialog to pick destination
       this.setState({ modalVisible: true });
       this.setViroAppProps({
         currentMarkerCoordinates: this.state.viroAppProps.markerCoordinates[
