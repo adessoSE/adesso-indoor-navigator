@@ -75,7 +75,7 @@ export default class MapScene extends Component {
     let usersPositionInMinimap = this.calcPixelInMapFromPositionRelativeToMarker({
       x: this.props.position[0],
       y: -this.props.position[2]
-    });
+    }, this.props.currentMarker);
 
     const positionOfTopLeftMinimapCorner = {
       top: mapOffset.top - (userImageSize / 2),
@@ -104,28 +104,28 @@ export default class MapScene extends Component {
             right: positionOfTopLeftMinimapCorner.right - positionInMinimap.left
           }}
         />
-        <Text style={{color: '#FFF', backgroundColor: 'rgba(0, 0, 0, .7)'}}>
+        {/* <Text style={{color: '#FFF', backgroundColor: 'rgba(0, 0, 0, .7)'}}>
           {JSON.stringify({
+            marker: this.props.currentMarker,
             position: this.state.position,
-            positionInMinimap
+            positionInMinimap,
           })}
-        </Text>
+        </Text> */}
       </View>
     );
   }
 
-  // TODO: use other default value for marker, currently 30, 5
-  calcPixelInMapFromPositionRelativeToMarker(positionRelativeToMarker, marker = {x: 30, y: 5}) {
+  calcPixelInMapFromPositionRelativeToMarker(positionRelativeToMarker, marker) {
     const office = adessoOffices.dortmund;
     
     const widthInMeters = office.width; // officeCorners.topLeft.distanceTo(officeCorners.topRight);
     const scaleFromMetersToPixels = office.mapDimensions.width / widthInMeters;
 
     const coordinateAsPixel = new Coordinate(positionRelativeToMarker)
-      .rotateCounterClockwiseAroundOriginBy(0)
+      .rotateCounterClockwiseAroundOriginBy(marker.offset.rotation.y * Math.PI / 180)
       .moveBy({
-        x: marker.x,
-        y: marker.y
+        x: marker.offset.position.x,
+        y: marker.offset.position.z
       })
       .scaleBy(scaleFromMetersToPixels);
     
@@ -146,7 +146,7 @@ export default class MapScene extends Component {
 MapScene.propTypes = {
   featuresMap: PropTypes.string.isRequired,
   heading: PropTypes.number.isRequired,
-  currentMarkerCoordinates: PropTypes.object,
+  currentMarker: PropTypes.object,
   position: PropTypes.arrayOf(PropTypes.number).isRequired,
   style: PropTypes.any
 };

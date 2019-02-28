@@ -40,6 +40,8 @@ export default class ViroSample extends Component {
       userData: null,
       headingAccuracy: null,
       startAR: null,
+      markersById: null,
+      currentMarker: null,
 
       // viroAppProps are used partially to pass information along to Viro React, but the object is also passed along
       // from Viro to other components, such as Navigation.js. In other words, this object is also used to pass
@@ -47,7 +49,6 @@ export default class ViroSample extends Component {
       viroAppProps: {
         featuresmap: VIRO_FEATURES_MAP,
         cameraPosition: [0, 0, 0],
-        currentMarkerCoordinates: null,
         destinationName: defaultDestinationName,
         destinationLocation: null,
         
@@ -58,7 +59,6 @@ export default class ViroSample extends Component {
 
         indicator: null,
         items: null,
-        markerCoordinates: null,
         markerID: 0, //actual marker ID
         markerPosition: [0, 0, 0],
         markers: null,
@@ -154,7 +154,7 @@ export default class ViroSample extends Component {
   }
 
   getMarkers = () => {
-    const items = this.state.viroAppProps.items;
+    const locations = this.state.viroAppProps.items;
     let markers = [];
 
     /*
@@ -162,31 +162,33 @@ export default class ViroSample extends Component {
      * Example: a marker named 'someMarker' at index 3 would lead
      * to the key 'someMarker3'
      */
-    let coordsObj = {};
+    let markersById = {};
 
-    items.forEach(item => {
-      if (item.markers) {
-        item.markers.forEach((marker, index) => {
+    locations.forEach(location => {
+      if (location.markers) {
+        location.markers.forEach((marker, index) => {
           //TODO: change nr to number / index
           /* Save every marker together with it's location and number (nr) */
+          const markerId = location.name + index;
+
           markers.push({
             ...marker,
-            location: item.name,
-            nr: index
+            location: location.name,
+            nr: index,
+            id: markerId
           });
+          
 
-          // Add marker coordinates to coordsObj
-          if (marker.coordinator) {
-            coordsObj[item.name + index] = marker.coordinator;
-          }
+          markersById[markerId] = {
+            ...marker,
+            location: location.name
+          };
         });
       }
     });
 
-    this.setViroAppProps({
-      markers: markers,
-      markerCoordinates: coordsObj
-    });
+    this.setState({ markersById });
+    this.setViroAppProps({ markers });
   }
 
   /**
@@ -247,11 +249,11 @@ export default class ViroSample extends Component {
               distance={this.state.distance}
             />
 
-            {USEMAP && this.state.viroAppProps.currentMarkerCoordinates ? (
+            {USEMAP && this.state.currentMarker ? (
               <MapScene
                 heading={this.state.viroAppProps.heading}
                 featuresMap={this.state.viroAppProps.featuresmap}
-                currentMarkerCoordinates={this.state.viroAppProps.currentMarkerCoordinates}
+                currentMarker={this.state.currentMarker}
                 position={this.state.viroAppProps.position}
               />
             ) : null}
@@ -374,11 +376,11 @@ export default class ViroSample extends Component {
       console.log('Marker with ID ' + markerID + ' detected.');
 
       // Show dialog to pick destination
-      this.setState({ modalVisible: true });
+      this.setState({
+        modalVisible: true,
+        currentMarker: this.state.markersById[markerID]
+      });
       this.setViroAppProps({
-        currentMarkerCoordinates: this.state.viroAppProps.markerCoordinates[
-          markerID
-        ],
         markerID: markerID,
         pauseUpdates: true,
         showPointCloud: false

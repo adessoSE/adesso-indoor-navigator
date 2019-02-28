@@ -1,13 +1,5 @@
-/**
- * Copyright (c) 2017-present, Viro Media, Inc.
- * All rights reserved.
- *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- */
-import React, { Component } from 'react';
-import { AppRegistry, StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { StyleSheet } from 'react-native';
 
 import {
   ViroARScene,
@@ -32,21 +24,10 @@ var markerID = 0;
 var markerPosSet = false;
 var DestinationObj;
 var Camera;
-var LOC = 'LEV';
-var locations;
 var markers = null;
-var DEBUG;
-var Scanning = false;
 var TargetObjects = null;
 
 var styles = StyleSheet.create({
-  helloWorldTextStyle: {
-    fontFamily: 'Arial',
-    fontSize: 30,
-    color: '#ffffff',
-    textAlignVertical: 'center',
-    textAlign: 'center'
-  },
   hud_text: {
     fontSize: 20,
     fontFamily: 'Roboto, Helvetica',
@@ -74,10 +55,8 @@ var Navigation = createReactClass({
     }
   }),
 
-  /* Initial State */
   getInitialState: function() {
     return {
-      debug: '',
       detection: 0,
       loadMarker: false
     };
@@ -85,7 +64,7 @@ var Navigation = createReactClass({
 
   componentDidMount() {},
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate() {
     if (
       !this.state.loadMarker &&
       this.props.arSceneNavigator.viroAppProps.markers !== null
@@ -97,11 +76,61 @@ var Navigation = createReactClass({
     }
   },
 
-  //
-  // ──────────────────────────────────────────────────── I ──────────
-  //   :::::: R E N D E R : :  :   :    :     :        :          :
-  // ──────────────────────────────────────────────────────────────
-  //
+  createLightsAndGround: () => (
+    <ViroNode>
+      <ViroOmniLight
+        intensity={300}
+        position={[-10, 10, 1]}
+        color={'#FFFFFF'}
+        attenuationStartDistance={20}
+        attenuationEndDistance={30}
+      />
+
+      <ViroOmniLight
+        intensity={300}
+        position={[10, 10, 1]}
+        color={'#FFFFFF'}
+        attenuationStartDistance={20}
+        attenuationEndDistance={30}
+      />
+
+      <ViroOmniLight
+        intensity={300}
+        position={[-10, -10, 1]}
+        color={'#FFFFFF'}
+        attenuationStartDistance={20}
+        attenuationEndDistance={30}
+      />
+
+      <ViroOmniLight
+        intensity={300}
+        position={[10, -10, 1]}
+        color={'#FFFFFF'}
+        attenuationStartDistance={20}
+        attenuationEndDistance={30}
+      />
+
+      <ViroSpotLight
+        position={[0, 8, -2]}
+        color='#ffffff'
+        direction={[0, -1, 0]}
+        intensity={50}
+        attenuationStartDistance={5}
+        attenuationEndDistance={10}
+        innerAngle={5}
+        outerAngle={20}
+        castsShadow={true}
+      />
+
+      <ViroQuad
+        rotation={[-90, 0, 0]}
+        position={[0, -1.6, 0]}
+        width={5}
+        height={5}
+        arShadowReceiver={true}
+      />
+    </ViroNode>
+  ),
 
   render() {
     return (
@@ -113,12 +142,6 @@ var Navigation = createReactClass({
           this.props.arSceneNavigator.viroAppProps.showPointCloud
         }
       >
-        <ViroText
-          text={this.state.debug ? 'Debug:' + this.state.debug : ''}
-          scale={[0.5, 0.5, 0.5]}
-          position={[0.8, -1, -1]}
-          style={styles.helloWorldTextStyle}
-        />
         <ViroAmbientLight color='#ffffff' intensity={200} />
         {/* Start ImageMarker */}
         {/* Generate ImageMarker based on Firebase Data */}
@@ -126,59 +149,8 @@ var Navigation = createReactClass({
           <ViroNode>{this._createARImageMarker()}</ViroNode>
         ) : null}
         {/* End ImageMarker */}
-        <ViroNode>
-          <ViroOmniLight
-            intensity={300}
-            position={[-10, 10, 1]}
-            color={'#FFFFFF'}
-            attenuationStartDistance={20}
-            attenuationEndDistance={30}
-          />
-
-          <ViroOmniLight
-            intensity={300}
-            position={[10, 10, 1]}
-            color={'#FFFFFF'}
-            attenuationStartDistance={20}
-            attenuationEndDistance={30}
-          />
-
-          <ViroOmniLight
-            intensity={300}
-            position={[-10, -10, 1]}
-            color={'#FFFFFF'}
-            attenuationStartDistance={20}
-            attenuationEndDistance={30}
-          />
-
-          <ViroOmniLight
-            intensity={300}
-            position={[10, -10, 1]}
-            color={'#FFFFFF'}
-            attenuationStartDistance={20}
-            attenuationEndDistance={30}
-          />
-
-          <ViroSpotLight
-            position={[0, 8, -2]}
-            color='#ffffff'
-            direction={[0, -1, 0]}
-            intensity={50}
-            attenuationStartDistance={5}
-            attenuationEndDistance={10}
-            innerAngle={5}
-            outerAngle={20}
-            castsShadow={true}
-          />
-
-          <ViroQuad
-            rotation={[-90, 0, 0]}
-            position={[0, -1.6, 0]}
-            width={5}
-            height={5}
-            arShadowReceiver={true}
-          />
-        </ViroNode>
+        
+        {this.createLightsAndGround()}
       </ViroARScene>
     );
   },
@@ -186,41 +158,28 @@ var Navigation = createReactClass({
   // ────────────────────────────────────────────────────────────────────────────────
 
   _createARImageMarker() {
-    var arMarkerArray = [];
-
-    /* Loop through each marker  */
-    markers.forEach(marker => {
-      let location = marker.location;
-      let targetname = location + '' + marker.nr;
-      arMarkerArray.push(
-        <ViroARImageMarker
-          target={targetname}
-          onAnchorFound={this._onAnchorFound.bind(this, targetname, location)}
-          onAnchorUpdated={this._onAnchorUpdated.bind(
-            this,
-            targetname,
-            location
+    return markers.map(marker => (
+      <ViroARImageMarker
+        target={marker.id}
+        onAnchorFound={this._onAnchorFound.bind(this, marker.id, marker.location)}
+        onAnchorUpdated={this._onAnchorUpdated.bind(this, marker.id, marker.location)}
+        pauseUpdates={this.props.arSceneNavigator.viroAppProps.pauseUpdates}
+        key={marker.id}
+      >
+        {/* Get position and scale from DB */}
+          {this._createNavigationOriginAndDestination(
+            marker.id,
+            [marker.offset.position.x, marker.offset.position.y, marker.offset.position.z],
+            [marker.offset.rotation.x, marker.offset.rotation.y, marker.offset.rotation.z]
           )}
-          pauseUpdates={this.props.arSceneNavigator.viroAppProps.pauseUpdates}
-          key={targetname}
-        >
-          {/* Get position and scale from DB */}
-          {this.props.arSceneNavigator.viroAppProps.destinationName !== 'none'
-            ? this._getPOIModel(
-                targetname,
-                Object.values(marker.offset.position),
-                Object.values(marker.offset.rotation)
-              )
-            : null}
-        </ViroARImageMarker>
-      );
-    });
-
-    return arMarkerArray;
+      </ViroARImageMarker>
+    ));
   },
 
-  _getPOIModel(id, pos, rot) {
-    if (id === markerID) {
+  _createNavigationOriginAndDestination(id, position, rotation) {
+    let { destinationName, destinationLocation } = this.props.arSceneNavigator.viroAppProps;
+
+    if (id === markerID && destinationName !== 'none') {
       return (
         <ViroNode ref='poi' visible={id === markerID}>
           <ViroSphere
@@ -229,7 +188,8 @@ var Navigation = createReactClass({
             radius={0.1}
             position={[-4.3, 6, 0]}
           />
-          <ViroNode position={pos} rotation={rot} scale={[1, 1, 1]}>
+          {/* <ViroNode position={position} rotation={rotation} scale={[1, 1, 1]}> */}
+          <ViroNode scale={[1, 1, 1]}>
             {/* Picture on Marker to check accuracy */}
             <ViroImage
               height={0.3}
@@ -239,12 +199,7 @@ var Navigation = createReactClass({
               source={require('./res/adesso_logo.png')}
             />
             {/* Set POI from viroAppProps */}
-            {this._set3DPOI(
-              this.props.arSceneNavigator.viroAppProps.destinationName,
-              this.props.arSceneNavigator.viroAppProps.destinationLocation
-                .position,
-              this.props.arSceneNavigator.viroAppProps.destinationLocation.scale
-            )}
+            {this._set3DPOI(destinationName, destinationLocation.position, destinationLocation.scale)}
           </ViroNode>
         </ViroNode>
       );
@@ -254,32 +209,30 @@ var Navigation = createReactClass({
   },
 
   _set3DPOI(name, position, scale) {
-    if (this.props.arSceneNavigator.viroAppProps.destinationName === name) {
-      return (
-        <ViroNode
-          position={Object.values(position)}
-          scale={Object.values(scale)}
-        >
-          <ViroText
-            style={styles.hud_text}
-            transformBehaviors={'billboardY'}
-            text={name}
-            textAlign={'center'}
-            rotation={[90, 180, 180]}
-            width={1.25}
-            position={[0, 0, 0]}
-          />
-          <Viro3DObject
-            onLoadEnd={this._onModelLoad}
-            source={require('./res/arrow/model.obj')}
-            resources={[require('./res/arrow/materials.mtl')]}
-            rotation={[0, 90, 90]}
-            type='OBJ'
-            ref={name}
-          />
-        </ViroNode>
-      );
-    }
+    return (
+      <ViroNode
+        position={Object.values(position)}
+        scale={Object.values(scale)}
+      >
+        <ViroText
+          style={styles.hud_text}
+          transformBehaviors={'billboardY'}
+          text={name}
+          textAlign={'center'}
+          rotation={[90, 180, 180]}
+          width={1.25}
+          position={[0, 0, 0]}
+        />
+        <Viro3DObject
+          onLoadEnd={this._onModelLoad}
+          source={require('./res/arrow/model.obj')}
+          resources={[require('./res/arrow/materials.mtl')]}
+          rotation={[0, 90, 90]}
+          type='OBJ'
+          ref={name}
+        />
+      </ViroNode>
+    );
   },
 
   //
