@@ -2,6 +2,10 @@
 
 ## Known bugs
 - White screen after first start of the app: Completely quit and restart the app on your phone without starting a new build
+- Blue indicators don't lead you towards the direction of your target. See #11
+
+## For adesso employees
+Some of the following instructions will require you create certain files. These files can be found [here](https://confluence.adesso.de/pages/viewpage.action?pageId=88609425) but you will need to enter your adesso credentials.
 
 ## Setup
 
@@ -24,15 +28,9 @@ Now you need to configure your project to use your own Viro API key and your own
 #### WARNING
 The `.env` is included in the `.gitignore` and will **not** be commited into your git repository. You must keep track of it **on your own**.
 
-### Step 4 - Create two specific JSON files
-For data privacy reasons, we removed two JSON files from the repository. In order for the build to succeed, you will need to at least create these files:
-
-1. `./js/res/json/floorplan_adesso.json`
-2. `./js/res/json/Javascript2018_Arena.json`
-
-You can fill them with some content similar to their template files (`[...]_template.json`).
-
-**Hint:** You can generate some randomized JSON [here](https://www.json-generator.com/).
+### Step 4 - Create images for the minimap
+For data privacy reasons, we removed an image of the adesso office in Dortmund from the repository. In order for the build to succeed, you will need to at least create a
+`./js/res/dortmund_4.png`. For ideal results, it should have a width of 550px and a height of 387px.
 
 ### Step 5
 
