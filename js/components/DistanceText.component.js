@@ -2,7 +2,7 @@ import React from 'react';
 import { Text, View } from 'react-native';
 import PropTypes from 'prop-types';
 
-import { localStyles } from '../../localStyles';
+import { generalStyles } from '../../generalStyles';
 
 const DistanceText = ({ destinationName, distance }) => {
   let text = '';
@@ -21,7 +21,7 @@ const DistanceText = ({ destinationName, distance }) => {
         alignItems: 'center'
       }}
     >
-      <Text style={localStyles.buttonText}>
+      <Text style={generalStyles.buttonText}>
         {text}
       </Text>
     </View>

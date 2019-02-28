@@ -1,6 +1,13 @@
 import React from 'react';
-import { View, Text } from 'react-native';
-import { localStyles } from '../../localStyles';
+import { View, Text, StyleSheet } from 'react-native';
+
+const styles = StyleSheet.create({
+  debugText: {
+    color: "#fff",
+    textAlign: "left",
+    fontSize: 16
+  }
+});
 
 const DebugCamera = (showCamera = false) => {
   if (showCamera) {
@@ -14,8 +21,7 @@ const DebugCamera = (showCamera = false) => {
           alignItems: 'center'
         }}
       >
-        <Text style={localStyles.debugText}>
-          {/* <Text>{this.state.viroAppProps.heading + ""}</Text> */}
+        <Text style={styles.debugText}>
           {/*   {"cameraPosition:" +
               JSON.stringify(this.state.viroAppProps.cameraPosition) +
               "\n"}

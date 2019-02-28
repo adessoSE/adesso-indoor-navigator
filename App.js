@@ -1,9 +1,8 @@
 import React, { Component } from 'react';
-import { View } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { ViroARSceneNavigator } from 'react-viro';
 
 import { VIRO_API_KEY, VIRO_FEATURES_MAP } from 'react-native-dotenv';
-import { localStyles } from './localStyles';
 import ModalFilterPicker from './js/components/ModalFilterPicker.component';
 import ScanButton from './js/components/ScanButton.component';
 import DestinationButton from './js/components/DestinationButton.component';
@@ -22,6 +21,23 @@ const InitialARScene = require('./js/Navigation');
 
 const defaultDestinationName = 'none';
 const defaultPauseUpdates = false;
+
+const style = StyleSheet.create({
+  loginContainer: {
+    justifyContent: "center",
+    marginTop: 50,
+    padding: 20,
+    backgroundColor: "#ffffff"
+  },
+  outer: {
+    flex: 1,
+    backgroundColor: "rgba(1,1,1,0.2)"
+  },
+  arView: {
+    flex: 2,
+    backgroundColor: "transparent"
+  }
+});
 
 export default class ViroSample extends Component {
   constructor(props) {
@@ -154,7 +170,7 @@ export default class ViroSample extends Component {
         {/* MiniMap and ViroScene */}
         {/* Only Render if the User is signed in*/}
         {isSignedIn ? (
-          <View style={localStyles.outer}>
+          <View style={style.outer}>
 
             {this.state.modalVisible ? (
               <ModalFilterPicker
@@ -166,7 +182,7 @@ export default class ViroSample extends Component {
             ) : null}
 
             <ViroARSceneNavigator
-              style={localStyles.arView}
+              style={style.arView}
               apiKey={VIRO_API_KEY}
               initialScene={{ scene: InitialARScene }}
               viroAppProps={this.state.viroAppProps}
@@ -203,7 +219,7 @@ export default class ViroSample extends Component {
           </View>
         ) : (
           // Login and info / start screen after login
-          <View style={localStyles.loginContainer}>
+          <View style={style.loginContainer}>
             {isSignedIn === false ?
               <LoginFailedScreen /> :
               (<View>
