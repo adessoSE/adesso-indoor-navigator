@@ -145,7 +145,6 @@ export default class MapScene extends Component {
 
 MapScene.propTypes = {
   featuresMap: PropTypes.string.isRequired,
-  heading: PropTypes.number.isRequired,
   currentMarker: PropTypes.object,
   position: PropTypes.arrayOf(PropTypes.number).isRequired,
   style: PropTypes.any

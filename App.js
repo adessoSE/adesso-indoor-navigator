@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { View } from 'react-native';
 import { ViroARSceneNavigator } from 'react-viro';
-import { orientation, setUpdateIntervalForType, SensorTypes } from 'react-native-sensors';
 
 import { VIRO_API_KEY, VIRO_FEATURES_MAP } from 'react-native-dotenv';
 import { localStyles } from './localStyles';
@@ -11,10 +10,8 @@ import DestinationButton from './js/components/DestinationButton.component';
 import DistanceText from './js/components/DistanceText.component';
 import Indicator from './js/components/Indicator.component';
 import DebugCamera from './js/components/DebugCamera.component';
-import StartingScreen from './js/components/StartingScreen.component';
 import LoginFailedScreen from './js/components/LoginFailedScreen.component';
 import LoginForm from './js/components/LoginForm.component';
-// import Minimap from './js/components/Minimap.component';
 import MapScene from './js/MapScene';
 import * as FirebaseTools from './js/components/FirebaseTools';
 
@@ -38,8 +35,6 @@ export default class ViroSample extends Component {
       modalVisible: false,
       options: null,
       userData: null,
-      headingAccuracy: null,
-      startAR: null,
       markersById: null,
       currentMarker: null,
 
@@ -51,12 +46,6 @@ export default class ViroSample extends Component {
         cameraPosition: [0, 0, 0],
         destinationName: defaultDestinationName,
         destinationLocation: null,
-        
-        // heading is set exactly once immediately before AR is started, so it contains the device's heading
-        // when the coordinate system was set. In other words, this angle (deg, not rad) is used to translate
-        // viro data to latitude and longitude
-        heading: null,
-
         indicator: null,
         items: null,
         markerID: 0, //actual marker ID
@@ -75,54 +64,7 @@ export default class ViroSample extends Component {
     };
   }
 
-  createHeadingListener = () => {
-    console.log('Creating HeadingListener');
-    let orientationUpdateInterval = 400;
-
-    setUpdateIntervalForType(SensorTypes.orientation, orientationUpdateInterval);
-
-    this.headingListener = orientation.subscribe(
-      update => {
-        this.onHeadingUpdated({
-          trueHeading: update.azimuth,
-          headingAccuracy: update.accuracy
-        });
-
-        this.setState({
-          headingIsSupported: true
-        });
-      },
-      error => {
-        console.error(error);
-        this.setState({
-          headingIsSupported: false
-        });
-      }
-    );
-  }
-
-  stopHeadingListener = () => {
-    this.headingListener.unsubscribe();
-  }
-
-  onHeadingUpdated = heading => {
-    if (this.state.headingAccuracy !== heading.headingAccuracy) {
-      /* Heading accuracy changed  */
-      this.setState({ headingAccuracy: heading.headingAccuracy });
-    }
-
-    /* set Heading when user wants to start OR if Accuracy is good*/
-    if (this.state.startAR || heading.headingAccuracy <= 20) {
-      this.setViroAppProps({ heading: heading.trueHeading });
-      console.log('Stopping HeadingListener');
-      this.stopHeadingListener();
-    }
-  }
-
   componentDidMount = () => {
-    /* Device Heading Listener */
-    this.createHeadingListener();
-
     /* Logout at start */
     // FirebaseTools.logOutOf(this.state.firebaseApp);
 
@@ -150,7 +92,6 @@ export default class ViroSample extends Component {
 
   componentWillUnmount = () => {
     console.log('Component will unmount');
-    this.stopHeadingListener();
   }
 
   getMarkers = () => {
@@ -206,16 +147,13 @@ export default class ViroSample extends Component {
   }
 
   render() {
-    const { isSignedIn, startAR } = this.state;
+    const { isSignedIn } = this.state;
     
     return (
       <React.Fragment>
         {/* MiniMap and ViroScene */}
-        {/* Only Render if the User is signed in
-        && this.state.viroAppProps.heading !== null
-        */}
-        {(isSignedIn && this.state.viroAppProps.heading !== null) ||
-        (isSignedIn && startAR) ? (
+        {/* Only Render if the User is signed in*/}
+        {isSignedIn ? (
           <View style={localStyles.outer}>
 
             {this.state.modalVisible ? (
@@ -251,7 +189,6 @@ export default class ViroSample extends Component {
 
             {USEMAP && this.state.currentMarker ? (
               <MapScene
-                heading={this.state.viroAppProps.heading}
                 featuresMap={this.state.viroAppProps.featuresmap}
                 currentMarker={this.state.currentMarker}
                 position={this.state.viroAppProps.position}
@@ -270,13 +207,7 @@ export default class ViroSample extends Component {
             {isSignedIn === false ?
               <LoginFailedScreen /> :
               (<View>
-                {isSignedIn === true ?
-                  <StartingScreen
-                    headingAccuracy={this.state.headingAccuracy}
-                    onForceStart={() => this.setState({ startAR: true })}
-                  /> :
-                  <LoginForm firebaseApp={this.state.firebaseApp} />
-                }
+                <LoginForm firebaseApp={this.state.firebaseApp} />
               </View>)}
           </View>
         )}
