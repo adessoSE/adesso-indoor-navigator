@@ -247,11 +247,7 @@ export default class ViroSample extends Component {
               distance={this.state.distance}
             />
 
-            {/* TODO: Remove the "|| true" once the minimap feature is completed */}
-            {USEMAP && (this.state.viroAppProps.currentMarkerCoordinates || true) ? (
-              // <Minimap
-                
-              // />
+            {USEMAP && this.state.viroAppProps.currentMarkerCoordinates ? (
               <MapScene
                 heading={this.state.viroAppProps.heading}
                 featuresMap={this.state.viroAppProps.featuresmap}

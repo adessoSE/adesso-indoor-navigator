@@ -9,41 +9,29 @@
 
 import React, { Component } from 'react';
 import {} from '../';
-import MapView, {
-  PROVIDER_DEFAULT,
-  ProviderPropType,
-  Marker
-} from 'react-native-maps';
 import PropTypes from 'prop-types';
-import Geojson from 'react-native-geojson';
-import StandMarker from './StandMarker';
 import user from './res/user.png';
 import {
-  Dimensions,
   View,
-  StyleSheet
+  StyleSheet,
+  Text,
+  Image
 } from 'react-native';
+import Coordinate from './Coordinate';
 
-const { width, height } = Dimensions.get('window');
+const adessoOffices = {
+  dortmund: {
+    mapDimensions: {
+      width: 550,
+      height: 387,
+      resizeBy: 0.25
+    },
+    width: 58,
+    height: 39
+  }
+};
 
-const ASPECT_RATIO = width / height;
-export const LATITUDE = 51.50427;
-export const LONGITUDE = 7.52738;
-export const LATITUDE_DELTA = 0.0002;
-export const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
-
-var floorplan = require('./res/json/floorplan_adesso.json'); //geojson data
 export let types = ['Zimmer', 'Toilette', 'Aufzug', 'Treppe', 'Platz', 'Technikhause']; //predefined types of romms
-/* const LATITUDE_1 = 52.49662;
-const LONGITUDE_1 = 13.454077;
- */
-/* GS CLG
- const LATITUDE_1 = 50.92;
-const LONGITUDE_1 = 6.9696;
- */
-
-export const LATITUDE_1 = 51.05799077414861;
-export const LONGITUDE_1 = 6.944936513900757;
 
 export const geojson_template = {
   type: 'FeatureCollection',
@@ -59,28 +47,14 @@ export const geojson_template = {
   ]
 };
 
+const userImageSize = 20, mapOffset = {top: 30, right: 30};
+
 export default class MapScene extends Component {
   constructor() {
-    console.warn('MAP!!!');
     super();
 
     this.state = {
-      region: {
-        latitude: LATITUDE_1,
-        longitude: LONGITUDE_1,
-        latitudeDelta: LATITUDE_DELTA,
-        longitudeDelta: LONGITUDE_DELTA
-      },
-      featuresArray: [],
-      coordinate: {
-        latitude: LATITUDE,
-        longitude: LONGITUDE
-      },
-      geolocation: {
-        //actual geolocation of user
-        latitude: LATITUDE_1,
-        longitude: LONGITUDE_1
-      }
+      featuresArray: []
     };
   }
 
@@ -95,110 +69,73 @@ export default class MapScene extends Component {
     }
   }
 
-  componentDidUpdate() {
-    const markerCoordinates = this.props.viroAppProps.currentMarkerCoordinates;
-    this.map.animateToRegion({
-      latitude: this.calcPostion(markerCoordinates, {
-        x: this.props.viroAppProps.position[0],
-        y: -this.props.viroAppProps.position[2]
-      }).latitude,
-      longitude: this.calcPostion(markerCoordinates, {
-        x: this.props.viroAppProps.position[0],
-        y: -this.props.viroAppProps.position[2]
-      }).longitude,
-      latitudeDelta: LATITUDE_DELTA,
-      longitudeDelta: LONGITUDE_DELTA
-    });
-  }
-
-  createMarkersFromFeatures = (features) => features.map((item) => 
-    item.features.map((feature, i) => (
-      <Marker
-        key={feature.properties.name + i}
-        coordinate={{
-          ...this.state.coordinate,
-          latitude: feature.geometry.coordinates[0][0][0][1],
-          longitude: feature.geometry.coordinates[0][0][0][0]
-        }}
-      >
-        <StandMarker name={feature.properties.name} />
-      </Marker>
-    ))
-  );
-
-  // Replace this function with the contents of _getVRNavigator() or _getARNavigator()
-  // if you are building a specific type of experience.
   render() {
-    const featuresArray = this.state.featuresArray;
+    const currOffice = adessoOffices.dortmund;
+
+    let usersPositionInMinimap = this.calcPixelInMapFromPositionRelativeToMarker({
+      x: this.props.position[0],
+      y: -this.props.position[2]
+    });
+
+    const positionOfTopLeftMinimapCorner = {
+      top: mapOffset.top - (userImageSize / 2),
+      right: mapOffset.right - (userImageSize / 2) + currOffice.mapDimensions.width * currOffice.mapDimensions.resizeBy,
+    };
+
+    const positionInMinimap = {
+      top: usersPositionInMinimap.y * currOffice.mapDimensions.resizeBy,
+      left: usersPositionInMinimap.x * currOffice.mapDimensions.resizeBy
+    };
+
+    // TODO remove file from gitignore when image is fetched from database
+    const mapImage = require('./res/dortmund_4.png');
 
     return (
-      <View style={this.props.style}>
-        <MapView
-          ref={ref => {
-            this.map = ref;
+      <View style={styles.container}>
+        <Image
+            source={mapImage}
+            style={styles.map}
+        />
+        <Image
+          source={user}
+          style={{
+            ...styles.user,
+            top: positionOfTopLeftMinimapCorner.top + positionInMinimap.top,
+            right: positionOfTopLeftMinimapCorner.right - positionInMinimap.left
           }}
-          provider={PROVIDER_DEFAULT}
-          style={styles.map}
-          initialRegion={this.state.region}
-        >
-          {this.createMarkersFromFeatures(featuresArray)}
-
-          {/* Set Floorplan Polygons */
-          /* TODO: replace floorplan with viroAppprop */}
-          <Geojson
-            geojson={floorplan}
-            fillColor={'#6304c2'}
-            strokeColor={'#555555'}
-          />
-          {/* Set User Marker */}
-          {/* Get Marker Coordinates from viroAppProps */}
-          <Marker
-            coordinate={this.calcPostion(
-              this.props.viroAppProps.currentMarkerCoordinates,
-              {
-                x: this.props.viroAppProps.position[0],
-                y: -this.props.viroAppProps.position[2]
-              }
-            )}
-            identifier='User'
-            image={user}
-            style={{ width: 25, height: 25 }}
-          />
-        </MapView>
+        />
+        <Text style={{color: '#FFF', backgroundColor: 'rgba(0, 0, 0, .7)'}}>
+          {JSON.stringify({
+            position: this.state.position,
+            positionInMinimap
+          })}
+        </Text>
       </View>
     );
   }
 
-  typeFilter(type, data) {
-    let features_new = data.features.filter(
-      feature => feature.properties.type === type
-    );
-    let filtered = { ...floorplan, features: features_new };
-    return filtered;
-  }
+  // TODO: use other default value for marker, currently 30, 5
+  calcPixelInMapFromPositionRelativeToMarker(positionRelativeToMarker, marker = {x: 30, y: 5}) {
+    const office = adessoOffices.dortmund;
+    
+    const widthInMeters = office.width; // officeCorners.topLeft.distanceTo(officeCorners.topRight);
+    const scaleFromMetersToPixels = office.mapDimensions.width / widthInMeters;
 
-  onRegionChange(region) {
-    this.setState({ region });
-  }
-
-  calcPostion(marker, position) {
-    const ANGLE = -this.props.viroAppProps.heading / 180;
-    //calculate postion regarding geographical north
-    let x_geo = position.x * Math.cos(ANGLE) + position.y * Math.sin(ANGLE);
-    let y_geo = position.y * Math.cos(ANGLE) - position.x * Math.sin(ANGLE);
-    let delta_lat = (y_geo / 6) * 0.0001;
-    let delta_long = (x_geo / 6) * 0.0001; //about 6 meter for 0.0001/ 0° 00′ 0.36″ longtitude
-    return {
-      latitude: marker.latitude + delta_lat,
-      longitude: marker.longitude + delta_long
-    };
-    //return { latitude:LATITUDE_1+delta_lat, longitude:LONGITUDE_1+delta_long};
+    const coordinateAsPixel = new Coordinate(positionRelativeToMarker)
+      .rotateCounterClockwiseAroundOriginBy(0)
+      .moveBy({
+        x: marker.x,
+        y: marker.y
+      })
+      .scaleBy(scaleFromMetersToPixels);
+    
+    return coordinateAsPixel;
   }
 
   /* Fetch Floorplan Features from json which is stored in viroAppProps */
   async getFeatures() {
     try {
-      let response = await fetch(this.props.viroAppProps.featuresmap);
+      let response = await fetch(this.props.featuresMap);
       return response.json();
     } catch (error) {
       console.error(error);
@@ -207,28 +144,30 @@ export default class MapScene extends Component {
 }
 
 MapScene.propTypes = {
-  provider: ProviderPropType,
-  // TODO: define correct propTypes
-  /* viroAppProps: {
-    currentMarkerCoordinates: PropTypes.array,
-    position: PropTypes.array,
-    heading: PropTypes.any,
-    featuresmap: PropTypes.any
-  }, */
-  viroAppProps: PropTypes.any,
+  featuresMap: PropTypes.string.isRequired,
+  heading: PropTypes.number.isRequired,
+  currentMarkerCoordinates: PropTypes.object,
+  position: PropTypes.arrayOf(PropTypes.number).isRequired,
   style: PropTypes.any
 };
 
 export const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
-    justifyContent: 'flex-end',
-    alignItems: 'center'
+    justifyContent: 'flex-start',
+    alignItems: 'flex-end',
+    padding: 0
   },
   map: {
-    width: 150,
-    height: 150,
-    borderRadius: 75
+    width: adessoOffices.dortmund.mapDimensions.width / 4,
+    height: adessoOffices.dortmund.mapDimensions.height / 4,
+    top: mapOffset.top,
+    right: mapOffset.right
+  },
+  user: {
+    position: 'absolute',
+    width: userImageSize,
+    height: userImageSize,
   },
   bubble: {
     backgroundColor: 'rgba(255,255,255,0.7)',
