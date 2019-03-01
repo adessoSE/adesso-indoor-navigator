@@ -158,22 +158,26 @@ var Navigation = createReactClass({
   // ────────────────────────────────────────────────────────────────────────────────
 
   _createARImageMarker() {
-    return markers.map(marker => (
-      <ViroARImageMarker
-        target={marker.id}
-        onAnchorFound={this._onAnchorFound.bind(this, marker.id, marker.location)}
-        onAnchorUpdated={this._onAnchorUpdated.bind(this, marker.id, marker.location)}
-        pauseUpdates={this.props.arSceneNavigator.viroAppProps.pauseUpdates}
-        key={marker.id}
-      >
-        {/* Get position and scale from DB */}
+    return markers.map(marker => {
+      let markerRotation = [marker.offset.rotation.x, marker.offset.rotation.y, marker.offset.rotation.z];
+    
+      return (
+        <ViroARImageMarker
+          target={marker.id}
+          onAnchorFound={this._onAnchorFound.bind(this, marker.id, marker.location)}
+          onAnchorUpdated={this._onAnchorUpdated.bind(this, marker.id, marker.location)}
+          pauseUpdates={this.props.arSceneNavigator.viroAppProps.pauseUpdates}
+          key={marker.id}
+        >
+          {/* Get position and scale from DB */}
           {this._createNavigationOriginAndDestination(
             marker.id,
             [marker.offset.position.x, marker.offset.position.y, marker.offset.position.z],
-            [marker.offset.rotation.x, marker.offset.rotation.y, marker.offset.rotation.z]
+            markerRotation
           )}
-      </ViroARImageMarker>
-    ));
+        </ViroARImageMarker>
+      );
+    });
   },
 
   _createNavigationOriginAndDestination(id, position, rotation) {
@@ -182,24 +186,20 @@ var Navigation = createReactClass({
     if (id === markerID && destinationName !== 'none') {
       return (
         <ViroNode ref='poi' visible={id === markerID}>
-          <ViroSphere
-            heightSegmentCount={50}
-            widthSegmentCount={50}
-            radius={0.1}
-            position={[-4.3, 6, 0]}
+          <ViroImage
+            height={0.3}
+            width={0.3}
+            position={[0, 0, 0.15]}
+            rotation={[-90, 0, 0]}
+            source={require('./res/adesso_logo.png')}
           />
           {/* <ViroNode position={position} rotation={rotation} scale={[1, 1, 1]}> */}
-          <ViroNode scale={[1, 1, 1]}>
+          <ViroNode scale={[1, 1, 1]} rotation={rotation}>
             {/* Picture on Marker to check accuracy */}
-            <ViroImage
-              height={0.3}
-              width={0.3}
-              position={[0, 0, 0.15]}
-              rotation={[90, 180, 180]}
-              source={require('./res/adesso_logo.png')}
-            />
             {/* Set POI from viroAppProps */}
-            {this._set3DPOI(destinationName, destinationLocation.position, destinationLocation.scale)}
+            <ViroNode position={this._subtract([0, 0, 0], position)} scale={[1, 1, 1]}>
+              {this._set3DPOI(destinationName, destinationLocation.position, destinationLocation.scale)}
+            </ViroNode>
           </ViroNode>
         </ViroNode>
       );
@@ -219,10 +219,12 @@ var Navigation = createReactClass({
           transformBehaviors={'billboardY'}
           text={name}
           textAlign={'center'}
-          rotation={[90, 180, 180]}
+          rotation={[-90, 0, 0]}
           width={1.25}
           position={[0, 0, 0]}
         />
+
+        {/* Arrow points to -x by default */}
         <Viro3DObject
           onLoadEnd={this._onModelLoad}
           source={require('./res/arrow/model.obj')}
@@ -348,25 +350,30 @@ var Navigation = createReactClass({
       this._normalize(DestinationObj.position)
     );
     let result = [];
-    /* Left or Right */
-    if (vec[0] < -0.3 && isVisible) {
-      result.push('right');
-      if (posvec[0] > 0) {
-        result.pop();
-        result.push('left');
-      }
-    } else if (vec[0] > 0.3 && isVisible) {
-      result.push('left');
-      if (posvec[0] < 0) {
-        result.pop();
+    if (isVisible) {
+      /* Left or Right */
+      if (vec[0] < -0.3) {
         result.push('right');
+
+        if (posvec[0] > 0) {
+          result.pop();
+          result.push('left');
+        }
+      } else if (vec[0] > 0.3) {
+        result.push('left');
+
+        if (posvec[0] < 0) {
+          result.pop();
+          result.push('right');
+        }
       }
-    }
-    /* Top or Bottom */
-    if (vec[1] < -0.3 && isVisible) {
-      result.push('top');
-    } else if (vec[1] > 0.3 && isVisible) {
-      result.push('bottom');
+      
+      /* Top or Bottom */
+      if (vec[1] < -0.3) {
+        result.push('top');
+      } else if (vec[1] > 0.3) {
+        result.push('bottom');
+      }
     }
 
     return result;
