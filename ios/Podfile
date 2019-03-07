@@ -3,4 +3,8 @@ target 'adessoIndoorNavigator' do
   use_frameworks!
   pod 'ViroReact', :path => '../node_modules/react-viro/ios/'
   pod 'ViroKit', :path => '../node_modules/react-viro/ios/dist/ViroRenderer/'
+  pod 'react-native-maps', :path => '../node_modules/react-native-maps'
+
+  pod 'RNSensors', :path => '../node_modules/react-native-sensors'
+
 end
