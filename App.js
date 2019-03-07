@@ -1,756 +1,33 @@
-import React, { Component } from "react";
-import {
-  Alert,
-  AppRegistry,
-  Button,
-  Dimensions,
-  Image,
-  NativeEventEmitter,
-  PixelRatio,
-  Platform,
-  StyleSheet,
-  Text,
-  TouchableHighlight,
-  TouchableOpacity,
-  View
-} from "react-native";
+import React, { Component } from 'react';
+import { View, StyleSheet } from 'react-native';
+import { ViroARSceneNavigator } from 'react-viro';
 
-// Device Heading
-import ReactNativeHeading from "@zsajjad/react-native-heading";
+import { VIRO_API_KEY, VIRO_FEATURES_MAP } from 'react-native-dotenv';
+import ModalFilterPicker from './js/components/ModalFilterPicker.component';
+import ScanButton from './js/components/ScanButton.component';
+import DestinationButton from './js/components/DestinationButton.component';
+import DistanceText from './js/components/DistanceText.component';
+import Indicator from './js/components/Indicator.component';
+import DebugCamera from './js/components/DebugCamera.component';
+import LoginFailedScreen from './js/components/LoginFailedScreen.component';
+import LoginForm from './js/components/LoginForm.component';
+import MapScene from './js/MapScene';
+import * as FirebaseTools from './js/components/FirebaseTools';
 
-import config from './config';
+// import MapScene from './js/MapScene';
 
-//
-// ─── LOGIN FORM ─────────────────────────────────────────────────────────────────
-//
+const USEMAP = true;
+const InitialARScene = require('./js/Navigation');
 
-import t from "tcomb-form-native";
-const Form = t.form.Form;
-const User = t.struct({
-  email: t.String,
-  password: t.String
-});
+const defaultDestinationName = 'none';
+const defaultPauseUpdates = false;
 
-const options = {
-  fields: {
-    email: {
-      error: "Please enter a valid @adesso Mail.",
-      autoCorrect: false,
-      autoCapitalize: "none",
-      autoFocus: true,
-      textContentType: "username"
-    },
-    password: {
-      error: "Please enter your password.",
-      password: true,
-      secureTextEntry: true,
-      textContentType: "password"
-    }
-  },
-  stylesheet: formStyles
-};
-const formStyles = {
-  ...Form.stylesheet,
-  formGroup: {
-    normal: {
-      marginBottom: 10
-    }
-  },
-  controlLabel: {
-    normal: {
-      color: "blue",
-      fontSize: 18,
-      marginBottom: 7,
-      fontWeight: "600"
-    },
-    // the style applied when a validation error occours
-    error: {
-      color: "red",
-      fontSize: 18,
-      marginBottom: 7,
-      fontWeight: "600"
-    }
-  }
-};
-// ────────────────────────────────────────────────────────────────────────────────
-
-//
-// ─── FIREBASE ───────────────────────────────────────────────────────────────────
-//
-
-import firebase from "firebase";
-firebase.initializeApp(config.firebase);
-const rootRef = firebase.database().ref();
-const itemsRef = rootRef.child("branches");
-// ────────────────────────────────────────────────────────────────────────────────
-
-import ModalFilterPicker from "react-native-modal-filter-picker";
-
-import { ViroSceneNavigator, ViroARSceneNavigator } from "react-viro";
-import MapScene from "./js/MapScene";
-
-var sharedProps = {
-  apiKey: config.viro.apiKey
-};
-// Sets the default scene you want for AR and VR
-var InitialARScene = require("./js/Navigation");
-
-var USEMAP = true;
-var UNSET = "UNSET";
-var VR_NAVIGATOR_TYPE = "VR";
-var AR_NAVIGATOR_TYPE = "AR";
-
-var defaultDestination = "none";
-var defaultPauseUpdates = false;
-export default class ViroSample extends Component {
-  constructor() {
-    super();
-    this._getListData = this._getListData.bind(this);
-    this._onCameraUpdate = this._onCameraUpdate.bind(this);
-    this._toggleDetection = this._toggleDetection.bind(this);
-    this._setMarkerID = this._setMarkerID.bind(this);
-    this._getCameraPosition = this._getCameraPosition.bind(this);
-    this._getMarkerPosition = this._getMarkerPosition.bind(this);
-    this._getPosition = this._getPosition.bind(this);
-
-    this.state = {
-      distance: 0,
-      isSignedIn: null,
-      locations: null,
-      modalVisible: false,
-      options: null,
-      sharedProps: sharedProps,
-      userData: null,
-      headingAccuracy: null,
-      startAR: null,
-      viroAppProps: {
-        featuresmap: config.viro.featuresMap,
-        cameraPosition: [0, 0, 0],
-        currentMarkerCoordinates: null,
-        destination: defaultDestination,
-        destinationLocation: null,
-        heading: null,
-        indicator: null,
-        items: null,
-        markerCoordinates: null,
-        markerID: 0, //actual marker ID
-        markerPosition: [0, 0, 0],
-        markers: null,
-        pauseUpdates: defaultPauseUpdates,
-        picked: null,
-        position: [0, 0, 0], //actual relativ position regarding marker
-        showPointCloud: true,
-        _getListData: this._getListData,
-        _onCameraUpdate: this._onCameraUpdate,
-        _setMarkerID: this._setMarkerID,
-        _getCameraPosition: this._getCameraPosition,
-        _getMarkerPosition: this._getMarkerPosition,
-        _getPosition: this._getPosition
-      }
-    };
-  }
-
-  handleSubmit = () => {
-    const value = this._form.getValue();
-    /* Set email and password */
-    if (value) {
-      this.setState(
-        prevState => {
-          const newState = prevState;
-          newState.userData = value;
-          return newState;
-        },
-        () => this.login()
-      );
-    }
-  };
-
-  login() {
-    /* Firebase Authentication */
-    firebase
-      .auth()
-      .signInWithEmailAndPassword(
-        this.state.userData.email,
-        this.state.userData.password
-      )
-      .then(credential => {
-        if (credential) {
-          console.log("Signed In");
-        }
-      })
-      /* Catch if login was invalid */
-      .catch(error =>
-        this.setState({
-          isSignedIn: false
-        })
-      );
-  }
-  createHeadingListener() {
-    console.log("Creating HeadingListener");
-    let headings = [];
-    this.listener = new NativeEventEmitter(ReactNativeHeading);
-    ReactNativeHeading.start(1).then(didStart => {
-      this.setState({
-        headingIsSupported: didStart
-      });
-    });
-
-    this.listener.addListener("headingUpdated", heading => {
-      console.log(heading, heading.headingAccuracy, heading.trueHeading);
-      /* rewrote npm package to get headingAccuracy and trueHeading value */
-      /* /node_modules/@zsajjad/react-native-heading/ReactNativeHeading.m */
-      /*
-          _heading = @{
-        @"trueHeading": @(newHeading.trueHeading),
-        @"headingAccuracy": @(newHeading.headingAccuracy)
-        };
-
-        [self sendEventWithName:@"headingUpdated" body:(_heading)];
-     */
-
-      if (this.state.headingAccuracy !== heading.headingAccuracy) {
-        /* Heading accuracy changed  */
-        this.setState(
-          {
-            headingAccuracy: heading.headingAccuracy
-          },
-          () => {
-            console.log("headingAccuracy set to " + this.state.headingAccuracy);
-          }
-        );
-      }
-      /* set Heading when user wants to start OR if Accuracy is good*/
-      if (this.state.startAR || heading.headingAccuracy <= 20) {
-        console.log("Stopping HeadingListener");
-        this.stopHeadingListener();
-        /* Accurate Heading found */
-        this.setState(
-          {
-            viroAppProps: {
-              ...this.state.viroAppProps,
-              heading: heading.trueHeading
-            }
-          },
-          () => {
-            console.log("Heading set to " + this.state.viroAppProps.heading);
-          }
-        );
-      }
-    });
-  }
-  componentDidMount() {
-    /* Device Heading Listener */
-    this.createHeadingListener();
-
-    /* Logout at start */
-    // firebase
-    //   .auth()
-    //   .signOut()
-    //   .then(() => {
-    //     console.log("Logged out");
-    //   })
-    //   .catch(error => console.log("error"));
-
-    /* Firebase get Data after login */
-    firebase.auth().onAuthStateChanged(user => {
-      if (user) {
-        console.info("User Logged in");
-        /* Logged in */
-        this.setState({
-          isSignedIn: true,
-          modalVisible: true
-        });
-        /* Get Data */
-        itemsRef.on("value", snapshot => {
-          let data = snapshot.val();
-          let items = Object.values(data);
-          this.setState(
-            {
-              viroAppProps: {
-                ...this.state.viroAppProps,
-                items: items
-              }
-            },
-            () => {
-              this.getMarkers();
-            }
-          );
-        });
-      }
-    });
-  }
-
-  componentWillUnmount() {
-    console.log("ComponentWillunmount");
-    //this.stopHeadingListener();
-  }
-  stopHeadingListener() {
-    ReactNativeHeading.stop();
-    this.listener.removeAllListeners("headingUpdated");
-  }
-  getMarkers() {
-    const items = this.state.viroAppProps.items;
-    let markers = [];
-    let coordsObj = {};
-    /* Get every marker and add location, nr */
-    items.forEach(item => {
-      if (item.markers) {
-        item.markers.forEach((marker, index) => {
-          //console.log("MARKERINDEXCOORDS:", marker.coordinator);
-          markers.push({
-            ...marker,
-            location: item.name,
-            nr: index
-          });
-          /* Add marker coordinates to coordsObj */
-          if (marker.coordinator) {
-            coordsObj = {
-              ...coordsObj,
-              [item.name + index]: marker.coordinator
-            };
-          }
-        });
-      }
-    });
-    this.setState({
-      viroAppProps: {
-        ...this.state.viroAppProps,
-        markers: markers,
-        markerCoordinates: coordsObj
-      }
-    });
-  }
-  // Replace this function with the contents of _getVRNavigator() or _getARNavigator()
-  // if you are building a specific type of experience.
-  render() {
-    const { modalVisible, isSignedIn, headingAccuracy, startAR } = this.state;
-
-    return (
-      <React.Fragment>
-        {/* MiniMap and ViroScene */}
-        {/* Only Render if the User is signed in
-        && this.state.viroAppProps.heading !== null
-        */}
-        {(isSignedIn && this.state.viroAppProps.heading !== null) ||
-        (isSignedIn && startAR) ? (
-          <View style={localStyles.outer}>
-            {this.state.options !== null ? (
-              <ModalFilterPicker
-                title={"Select Destination"}
-                visible={modalVisible}
-                onSelect={this.onSelect}
-                onCancel={this.onCancel}
-                options={this.state.options}
-                placeholderText={"Büro, Vorname, Nachname"}
-              />
-            ) : (
-              <View />
-            )}
-            <ViroARSceneNavigator
-              style={localStyles.arView}
-              {...this.state.sharedProps}
-              initialScene={{ scene: InitialARScene }}
-              viroAppProps={this.state.viroAppProps}
-            />
-            {/* Scan Button */}
-            <View
-              style={{
-                position: "absolute",
-                left: 15,
-                right: 0,
-                top: 15,
-                alignItems: "flex-start"
-              }}
-            >
-              <TouchableHighlight onPress={this._toggleDetection}>
-                <Image
-                  style={localStyles.icon}
-                  source={require("./js/res/barcode.png")}
-                />
-              </TouchableHighlight>
-            </View>
-            {/* Desitnation Button */}
-            {this.state.viroAppProps.destinationLocation ? (
-              <View
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  bottom: 25,
-                  alignItems: "center"
-                }}
-              >
-                <TouchableHighlight
-                  style={localStyles.buttons}
-                  onPress={this.onShow}
-                  underlayColor={"#68a0ff"}
-                >
-                  <Text style={localStyles.buttonText}>
-                    {this.state.viroAppProps.destination !== "none"
-                      ? "Destination: " + this.state.viroAppProps.destination
-                      : "Choose Destination"}
-                  </Text>
-                </TouchableHighlight>
-              </View>
-            ) : null}
-            {/* Distance Text */}
-            <View
-              style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                bottom: 10,
-                alignItems: "center"
-              }}
-            >
-              <Text style={localStyles.buttonText}>
-                {this.state.viroAppProps.destination !== "none"
-                  ? this.state.distance !== 0
-                    ? "Distance: " + this.state.distance + " m"
-                    : "Please scan a marker!"
-                  : ""}
-              </Text>
-            </View>
-            {USEMAP && this.state.viroAppProps.currentMarkerCoordinates ? (
-              <MapScene
-                style={localStyles.map}
-                viroAppProps={this.state.viroAppProps}
-              />
-            ) : null}
-            {/* Indicator */}
-            {this._getIndicatorLR()}
-            {this._getIndicatorTB()}
-            {/* Debug Camera */}
-            {
-              // <View
-              //   style={{
-              //     position: "absolute",
-              //     left: 0,
-              //     right: 0,
-              //     bottom: "50%",
-              //     alignItems: "center"
-              //   }}
-              // >
-              //   <Text style={localStyles.debugText}>
-              //     {/* <Text>{this.state.viroAppProps.heading + ""}</Text> */}
-              //     {/*   {"cameraPosition:" +
-              //         JSON.stringify(this.state.viroAppProps.cameraPosition) +
-              //         "\n"}
-              //       {"markerPosition:" +
-              //         JSON.stringify(this.state.viroAppProps.markerPosition) +
-              //         "\n"}
-              //       {"Position:" +
-              //         JSON.stringify(this.state.viroAppProps.position) +
-              //         "\n"} */}
-              //   </Text>
-              // </View>
-            }
-          </View>
-        ) : (
-          //
-          // LOGIN FORM
-          //
-          /* Failed login message */
-          <View style={localStyles.loginContainer}>
-            {isSignedIn === false ? (
-              <Text style={{ color: "red" }}>
-                Login Failed. Make sure you are registered.
-              </Text>
-            ) : null}
-            <View>
-              {isSignedIn === true ? (
-                <View>
-                  <Text>
-                    Heading accuracy is:
-                    {headingAccuracy > 20 ? (
-                      <Text style={{ color: "red" }}>
-                        low: {headingAccuracy}
-                      </Text>
-                    ) : (
-                      <Text style={{ color: "green" }}>{headingAccuracy}</Text>
-                    )}
-                  </Text>
-
-                  <View>
-                    <TouchableHighlight
-                      style={localStyles.startARButton}
-                      onPress={this.onStartAR}
-                      underlayColor={"#ff8888"}
-                    >
-                      <Text style={localStyles.buttonText}>Start AR</Text>
-                    </TouchableHighlight>
-                  </View>
-                </View>
-              ) : (
-                <View>
-                  <Form
-                    ref={c => (this._form = c)} // assign a ref
-                    type={User}
-                    options={options}
-                  />
-                  <Button title="Sign in" onPress={this.handleSubmit} />
-                </View>
-              )}
-            </View>
-          </View>
-          // /LOGIN• • • • •
-        )}
-        )}
-      </React.Fragment>
-    );
-  }
-
-  onShow = () => {
-    this.setState({ modalVisible: true });
-  };
-
-  onStartAR = () => {
-    this.setState({ startAR: true });
-  };
-  onSelect = picked => {
-    /* Filter the current picked entry  */
-    let destPos = this.state.locations.pois.filter(
-      poi => poi.title === picked.key
-    )[0];
-
-    this.setState({
-      modalVisible: false,
-      viroAppProps: {
-        ...this.state.viroAppProps,
-        destination: picked.key,
-        destinationLocation: destPos
-      }
-    });
-  };
-
-  onCancel = () => {
-    this.setState({
-      modalVisible: false
-    });
-  };
-
-  //
-  // ─── INDICATORS ─────────────────────────────────────────────────────────────────
-  //
-
-  _getIndicatorLR() {
-    if (this.state.indicator) {
-      return (
-        /* Indicator Left */
-        this.state.indicator[0] === "left" ? (
-          <View
-            style={{
-              position: "absolute",
-              left: 15,
-              right: 0,
-              top: "35%",
-              alignItems: "flex-start"
-            }}
-          >
-            <Image
-              style={localStyles.arrowleft}
-              source={require("./js/res/left.png")}
-            />
-          </View>
-        ) : /* Indicator Right */
-        this.state.indicator[0] === "right" ? (
-          <View
-            style={{
-              position: "absolute",
-              right: 15,
-              top: "35%",
-              alignItems: "flex-start"
-            }}
-          >
-            <Image
-              style={localStyles.arrowright}
-              source={require("./js/res/left.png")}
-            />
-          </View>
-        ) : (
-          <View />
-        )
-      );
-    }
-  }
-
-  _getIndicatorTB() {
-    if (this.state.indicator) {
-      return (
-        /* Indicator Top */
-        this.state.indicator[0] === "top" ||
-          this.state.indicator[1] === "top" ? (
-          <View
-            style={{
-              position: "absolute",
-              left: "45%",
-              right: 0,
-              top: -15,
-              alignItems: "flex-start"
-            }}
-          >
-            <Image
-              style={localStyles.arrowtop}
-              source={require("./js/res/left.png")}
-            />
-          </View>
-        ) : /* Indicator Bottom */
-        this.state.indicator[0] === "bottom" ||
-        this.state.indicator[1] === "bottom" ? (
-          <View
-            style={{
-              position: "absolute",
-              left: "45%",
-              right: 0,
-              bottom: 80,
-              alignItems: "flex-start"
-            }}
-          >
-            <Image
-              style={localStyles.arrowbottom}
-              source={require("./js/res/left.png")}
-            />
-          </View>
-        ) : (
-          <View />
-        )
-      );
-    }
-  }
-
-  _getListData(location) {
-    /*  get locaiton list Data after scanned Marker (known location)  */
-    const items = this.state.viroAppProps.items;
-    let opt = [];
-    const locations = items.filter(item => item.name === location);
-    if (locations) {
-      /* push each poi name into options */
-      locations[0].pois.forEach(poi => {
-        opt.push({
-          key: poi.title,
-          label: poi.title,
-          searchKey: poi.title
-        });
-      });
-      this.setState({
-        locations: locations[0],
-        options: opt
-      });
-    }
-  }
-
-  _toggleDetection() {
-    this.setState({
-      viroAppProps: {
-        ...this.state.viroAppProps,
-        pauseUpdates: false
-      }
-    });
-  }
-
-  //
-  // ─── CAMERAPOSITION ─────────────────────────────────────────────────────────────
-  //
-
-  _onCameraUpdate(distance, indicator) {
-    if (
-      (!this.state.modalVisible && distance < this.state.distance - 0.1) ||
-      distance > this.state.distance + 0.1
-    ) {
-      this.setState({
-        distance: distance,
-        indicator: indicator
-      });
-    }
-  }
-  _getCameraPosition(position) {
-    /* set new Position if there is a significant difference */
-    const newpos = position.reduce(
-      (accumulator, currentValue) => accumulator + currentValue
-    );
-    const oldpos = this.state.viroAppProps.cameraPosition.reduce(
-      (accumulator, currentValue) => accumulator + currentValue
-    );
-    const diff = newpos - oldpos;
-    if (diff < -0.1 || diff > 0.1) {
-      console.log("Set new cameraPosition");
-      this.setState({
-        viroAppProps: {
-          ...this.state.viroAppProps,
-          cameraPosition: position,
-          position: this._getPosition()
-        }
-      });
-    }
-  }
-  _getMarkerPosition(position) {
-    this.setState({
-      viroAppProps: {
-        ...this.state.viroAppProps,
-        markerPosition: position
-      }
-    });
-  }
-  _getPosition() {
-    if (
-      this.state.viroAppProps.markerPosition &&
-      this.state.viroAppProps.cameraPosition
-    ) {
-      let position = [
-        this.state.viroAppProps.cameraPosition[0] -
-          this.state.viroAppProps.markerPosition[0],
-        this.state.viroAppProps.cameraPosition[1] -
-          this.state.viroAppProps.markerPosition[1],
-        this.state.viroAppProps.cameraPosition[2] -
-          this.state.viroAppProps.markerPosition[2]
-      ];
-      return position;
-    }
-  }
-  _setMarkerID(id) {
-    /* Marker Found */
-    /* Check if new Marker is found */
-    if (id !== this.state.viroAppProps.markerID) {
-      console.log("Set MarkerID & pauseUpdates true");
-      console.log(
-        "This ID is: ",
-        id,
-        "and coords: ",
-        this.state.viroAppProps.markerCoordinates[id]
-      );
-      this.setState({
-        viroAppProps: {
-          ...this.state.viroAppProps,
-          currentMarkerCoordinates: this.state.viroAppProps.markerCoordinates[
-            id
-          ],
-          markerID: id,
-          pauseUpdates: true,
-          showPointCloud: false
-        }
-      });
-    } else if (!this.state.viroAppProps.pauseUpdates) {
-      console.log("Same marker. Set pauseUpdates true");
-      this.setState({
-        viroAppProps: {
-          ...this.state.viroAppProps,
-          pauseUpdates: true
-        }
-      });
-    }
-  }
-}
-
-var localStyles = StyleSheet.create({
+const style = StyleSheet.create({
   loginContainer: {
     justifyContent: "center",
     marginTop: 50,
     padding: 20,
     backgroundColor: "#ffffff"
-  },
-  viroContainer: {
-    flex: 1,
-    backgroundColor: "black"
   },
   outer: {
     flex: 1,
@@ -759,96 +36,307 @@ var localStyles = StyleSheet.create({
   arView: {
     flex: 2,
     backgroundColor: "transparent"
-  },
-  map: {
-    justifyContent: "center",
-    alignItems: "center",
-    alignSelf: "flex-end",
-    position: "absolute",
-    backgroundColor: "transparent"
-  },
-  inner: {
-    flex: 1,
-    flexDirection: "column",
-    alignItems: "center",
-    backgroundColor: "black"
-  },
-  titleText: {
-    paddingTop: 30,
-    paddingBottom: 20,
-    color: "#fff",
-    textAlign: "center",
-    fontSize: 25
-  },
-  buttonText: {
-    color: "#fff",
-    textAlign: "center",
-    fontSize: 20
-  },
-  debugText: {
-    color: "#fff",
-    textAlign: "left",
-    fontSize: 16
-  },
-  buttons: {
-    height: 70,
-    width: 250,
-    paddingTop: 20,
-    paddingBottom: 20,
-    marginTop: 10,
-    marginBottom: 10,
-    backgroundColor: "#68a0cf",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#fff"
-  },
-  startARButton: {
-    height: 70,
-    width: 250,
-    paddingTop: 20,
-    paddingBottom: 20,
-    marginTop: 10,
-    marginBottom: 10,
-    backgroundColor: "#cc2222",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#fff"
-  },
-  exitButton: {
-    height: 50,
-    width: 100,
-    paddingTop: 10,
-    paddingBottom: 10,
-    marginTop: 10,
-    marginBottom: 10,
-    backgroundColor: "#68a0cf",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#fff"
-  },
-  icon: {
-    height: 64,
-    width: 64
-  },
-  arrowleft: {
-    width: 73,
-    height: 147
-  },
-  arrowtop: {
-    width: 73,
-    height: 147,
-    transform: [{ rotate: "90deg" }]
-  },
-  arrowright: {
-    width: 73,
-    height: 147,
-    transform: [{ rotate: "180deg" }]
-  },
-  arrowbottom: {
-    width: 73,
-    height: 147,
-    transform: [{ rotate: "-90deg" }]
   }
 });
+
+export default class ViroSample extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      firebaseApp: FirebaseTools.initializeDatabase(),
+      distance: 0,
+      isSignedIn: null,
+      locations: null,
+      modalVisible: false,
+      options: null,
+      userData: null,
+      markersById: null,
+      currentMarker: null,
+
+      // viroAppProps are used partially to pass information along to Viro React, but the object is also passed along
+      // from Viro to other components, such as Navigation.js. In other words, this object is also used to pass
+      // data to components, other than those from Viro React.
+      viroAppProps: {
+        featuresmap: VIRO_FEATURES_MAP,
+        cameraPosition: [0, 0, 0],
+        destinationName: defaultDestinationName,
+        destinationLocation: null,
+        indicator: null,
+        items: null,
+        markerID: 0, //actual marker ID
+        markerPosition: [0, 0, 0],
+        markers: null,
+        pauseUpdates: defaultPauseUpdates,
+        picked: null,
+        position: [0, 0, 0], //actual relativ position regarding marker
+        showPointCloud: true,
+        _getListData: this._getListDataForLocation,
+        setDistanceAndIndicatorDirections: this.setDistanceAndIndicatorDirections,
+        onMarkerDetected: this.onMarkerDetected,
+        setNewCameraPosition: this.setNewCameraPosition,
+        setNewMarkerPosition: this.setNewMarkerPosition,
+      }
+    };
+  }
+
+  componentDidMount = () => {
+    /* Logout at start */
+    // FirebaseTools.logOutOf(this.state.firebaseApp);
+
+    /* Firebase get Data after login */
+    this.state.firebaseApp.auth().onAuthStateChanged(user => {
+      if (user) {
+        console.info('User Logged in');
+
+        this.setState({
+          isSignedIn: true,
+          modalVisible: true
+        });
+
+        /* Get Data */
+        let itemsRef = FirebaseTools.getItemsRef(this.state.firebaseApp);
+
+        itemsRef.on('value', snapshot => {
+          let data = snapshot.val();
+          let items = Object.values(data);
+          this.setViroAppProps({ items: items }, this.getMarkers);
+        });
+      }
+    });
+  }
+
+  componentWillUnmount = () => {
+    console.log('Component will unmount');
+  }
+
+  getMarkers = () => {
+    const locations = this.state.viroAppProps.items;
+    let markers = [];
+
+    /*
+     * Saves coordinates of all markers by marker name + index.
+     * Example: a marker named 'someMarker' at index 3 would lead
+     * to the key 'someMarker3'
+     */
+    let markersById = {};
+
+    locations.forEach(location => {
+      if (location.markers) {
+        location.markers.forEach((marker, index) => {
+          //TODO: change nr to number / index
+          /* Save every marker together with it's location and number (nr) */
+          const markerId = location.name + index;
+
+          markers.push({
+            ...marker,
+            location: location.name,
+            nr: index,
+            id: markerId
+          });
+          
+
+          markersById[markerId] = {
+            ...marker,
+            location: location.name
+          };
+        });
+      }
+    });
+
+    this.setState({ markersById });
+    this.setViroAppProps({ markers });
+  }
+
+  /**
+   * Sets attributes of state.viroAppProps.
+   * @param [object] newProps - Object containing the properties to be set
+   * @param [function] callback
+   */
+  setViroAppProps = (newProps, callback = () => {}) => {
+    this.setState({
+      viroAppProps: {
+        ...this.state.viroAppProps,
+        ...newProps
+      }
+    }, callback);
+  }
+
+  render() {
+    const { isSignedIn } = this.state;
+    
+    return (
+      <React.Fragment>
+        {/* MiniMap and ViroScene */}
+        {/* Only Render if the User is signed in*/}
+        {isSignedIn ? (
+          <View style={style.outer}>
+
+            {this.state.modalVisible ? (
+              <ModalFilterPicker
+                onCancel={this.onModalClose }
+                onDestinationUpdate={this.onDestinationUpdate}
+                locations={this.state.locations}
+                options={this.state.options}
+              />
+            ) : null}
+
+            <ViroARSceneNavigator
+              style={style.arView}
+              apiKey={VIRO_API_KEY}
+              initialScene={{ scene: InitialARScene }}
+              viroAppProps={this.state.viroAppProps}
+            />
+
+            <ScanButton
+              onPress={() => this.setViroAppProps({pauseUpdates: false})}
+            />
+
+            <DestinationButton
+              destinationLocation={this.state.viroAppProps.destinationLocation}
+              destinationName={this.state.viroAppProps.destinationName}
+              onPress={() => this.setState({ modalVisible: true })}
+            />
+
+            <DistanceText
+              destinationName={this.state.viroAppProps.destinationName}
+              distance={this.state.distance}
+            />
+
+            {USEMAP && this.state.currentMarker ? (
+              <MapScene
+                featuresMap={this.state.viroAppProps.featuresmap}
+                currentMarker={this.state.currentMarker}
+                position={this.state.viroAppProps.position}
+              />
+            ) : null}
+
+            {/* Indicators */}
+            <Indicator directions={this.state.indicator} />
+
+            {/* Debug Camera, not shown by default */}
+            <DebugCamera />
+          </View>
+        ) : (
+          // Login and info / start screen after login
+          <View style={style.loginContainer}>
+            {isSignedIn === false ?
+              <LoginFailedScreen /> :
+              (<View>
+                <LoginForm firebaseApp={this.state.firebaseApp} />
+              </View>)}
+          </View>
+        )}
+      </React.Fragment>
+    );
+  }
+
+  onDestinationUpdate = (destinationName, destinationLocation) => {
+    this.setViroAppProps({
+      destinationName,
+      destination: destinationName,
+      destinationLocation
+    });
+    this.setState({ modalVisible: false });
+  }
+
+  onModalClose = () => {
+    this.setState({
+      modalVisible: false
+    });
+  }
+
+  _getListDataForLocation = locationName => {
+    /*  get locaiton list Data after scanned Marker (known location)  */
+    const items = this.state.viroAppProps.items;
+    const locationsWithMatchingName = items.filter(item => item.name === locationName);
+    let options = [];
+    //TODO: replace with locations.length > 0
+    if (locationsWithMatchingName) {
+      /* push each poi name into options */
+      locationsWithMatchingName[0].pois.forEach(poi => {
+        options.push({
+          key: poi.title,
+          label: poi.title,
+          searchKey: poi.title
+        });
+      });
+      this.setState({
+        locations: locationsWithMatchingName[0],
+        options: options
+      });
+    }
+  }
+
+  setDistanceAndIndicatorDirections = (newDistance, newIndicatorDirections) => {
+    const distanceDifference = Math.abs(newDistance - this.state.distance);
+
+    if (!this.state.modalVisible && distanceDifference > 0.1) {
+      this.setState({
+        distance: newDistance,
+        indicator: newIndicatorDirections
+      });
+    }
+  }
+
+  setNewCameraPosition = newCameraPosition => {
+    const addValues = (a, b) => a + b;
+
+    // TODO this calculates the sum of all differences on all the axes
+    // instead of the distance between the to positions. This might
+    // be intentional, but it might also be a bug.
+    const newpos = newCameraPosition.reduce(addValues);
+    const oldpos = this.state.viroAppProps.cameraPosition.reduce(addValues);
+    const diff = newpos - oldpos;
+        
+    /* set new Position if there is a significant difference */
+    if (Math.abs(diff) < 0.1) {
+      this.setViroAppProps({
+        cameraPosition: newCameraPosition,
+        position: this.getCameraPositionRelativeToMarker()
+      });
+    }
+  }
+
+  setNewMarkerPosition = newMarkerPosition => {
+    this.setViroAppProps({
+      markerPosition: newMarkerPosition
+    });
+  }
+
+  getCameraPositionRelativeToMarker = () => {
+    const markerPosition = this.state.viroAppProps.markerPosition;
+    const cameraPosition = this.state.viroAppProps.cameraPosition;
+
+    if (markerPosition && cameraPosition) {
+      return [
+        cameraPosition[0] - markerPosition[0],
+        cameraPosition[1] - markerPosition[1],
+        cameraPosition[2] - markerPosition[2]
+      ];
+    }
+  }
+
+  onMarkerDetected = markerID => {
+    /* Check if the marker is the same one as before */
+    if (markerID !== this.state.viroAppProps.markerID) {
+      console.log('Marker with ID ' + markerID + ' detected.');
+
+      // Show dialog to pick destination
+      this.setState({
+        modalVisible: true,
+        currentMarker: this.state.markersById[markerID]
+      });
+      this.setViroAppProps({
+        markerID: markerID,
+        pauseUpdates: true,
+        showPointCloud: false
+      });
+    } else if (!this.state.viroAppProps.pauseUpdates) {
+      console.log('Same marker found as before, will stop looking for markers');
+      this.setViroAppProps({ pauseUpdates: true });
+    }
+  }
+}
 
 module.exports = ViroSample;

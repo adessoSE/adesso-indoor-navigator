@@ -1,0 +1,36 @@
+{
+    "parser": "babel-eslint",
+    "env": {
+        "browser": true,
+        "node": true,
+        "jest": true
+    },
+    "plugins": [
+        "react"
+    ],
+    "extends": [
+        "eslint:recommended",
+        "plugin:react/recommended"
+    ],
+    "rules": {
+        "no-console": "off",
+        "no-unused-vars": "warn",
+        "max-len": ["error", 120],
+        "semi":"error",
+        "arrow-spacing": "error",
+        "comma-spacing": "error",
+        "default-case": "error",
+        "lines-between-class-members": "error",
+        "no-confusing-arrow": ["error", {"allowParens": false}],
+        "block-spacing": "error",
+        "func-call-spacing": "error",
+        "array-callback-return": "error",
+        "block-scoped-var": "error",
+        "no-eq-null": "error",
+        "no-floating-decimal": "error",
+        "no-lone-blocks": "error",
+        "no-magic-numbers": ["warn", {"ignore": [-360, -180, -90, -1, -0.25, -0.1, 0, 0.1, 0.25, 0.5, 1, 2, 90, 180, 360]}],
+        "no-self-compare": "error",
+        "quotes": ["warn", "single", { "avoidEscape": true }]
+    }
+}

@@ -1,31 +1,10 @@
-#User specific configuration
-config.js
-js/res/json/*
+.env
+dortmund_4.png
 
-#From .gitignore that was originally in the parent directory
-ios/Podfile.lock
-ios/ngrokendpoint.txt
-ios/Pods/Manifest.lock
-ios/Pods/Headers/Private/ViroReact/VRTMaterialChangedDelegate.h
-ios/Pods/Headers/Private/ViroReact/VRTPolygonManager.h
-ios/Pods/Headers/Public/ViroReact/VRTMaterialChangedDelegate.h
-ios/Pods/Headers/Public/ViroReact/VRTPolygonManager.h
-ios/Pods/Pods.xcodeproj/project.pbxproj
-ios/Pods/Target Support Files/AWSCore/AWSCore.xcconfig
-ios/Pods/Target Support Files/AWSDynamoDB/AWSDynamoDB.xcconfig
-ios/Pods/Target Support Files/GTMSessionFetcher/GTMSessionFetcher.xcconfig
-ios/Pods/Target Support Files/GoogleToolboxForMac/GoogleToolboxForMac.xcconfig
-ios/Pods/Target Support Files/Pods-ViroSample/Pods-ViroSample-frameworks.sh
-ios/Pods/Target Support Files/Pods-ViroSample/Pods-ViroSample-resources.sh
-ios/Pods/Target Support Files/Pods-ViroSample/Pods-ViroSample.debug.xcconfig
-ios/Pods/Target Support Files/Pods-ViroSample/Pods-ViroSample.release.xcconfig
-ios/ViroSample/Info.plist
-ios/ViroSample.xcodeproj/project.pbxproj
-ios/*
-
+Pods/
 # OSX
 #
-*.DS_Store
+.DS_Store
 
 # Xcode
 #
@@ -60,6 +39,7 @@ local.properties
 node_modules/
 npm-debug.log
 yarn-error.log
+coverage/
 
 # BUCK
 buck-out/
@@ -76,3 +56,6 @@ buck-out/
 */fastlane/report.xml
 */fastlane/Preview.html
 */fastlane/screenshots
+
+# Bundle artifact
+*.jsbundle
