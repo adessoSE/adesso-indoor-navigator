@@ -5,6 +5,7 @@
   - [For adesso employees](#for-adesso-employees)
   - [Setup](#setup)
     - [Step 1 - Follow steps 1-4 in the quickstart guide](#step-1---follow-steps-1-4-in-the-quickstart-guide)
+      - [Recommendations](#recommendations)
     - [Step 2 - Clone & install repository](#step-2---clone--install-repository)
     - [Step 3 - Edit `.env`](#step-3---edit-env)
       - [WARNING](#warning)
@@ -36,7 +37,11 @@ Some of the following instructions will require you create certain files. These 
 - Install and ruby
 - [Mac / Linux only] Install watchman
 
-**Recommended**: Use rbenv:
+#### Recommendations
+
+**For Mac users**:
+
+Use rbenv:
 - Install using Homebrew: `$ brew install rbenv`
 - Initiliaze rbenv: `$ rbenv init`
 - Install Ruby (at least 2.2.0): `$ rbenv install 2.3.0`
