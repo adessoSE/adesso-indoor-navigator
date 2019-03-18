@@ -29,7 +29,7 @@
         "no-eq-null": "error",
         "no-floating-decimal": "error",
         "no-lone-blocks": "error",
-        "no-magic-numbers": ["warn", {"ignore": [-180, -90, -1, -0.25, -0.1, 0, 0.1, 0.25, 0.5, 1, 2, 90, 180]}],
+        "no-magic-numbers": ["warn", {"ignore": [-360, -180, -90, -1, -0.25, -0.1, 0, 0.1, 0.25, 0.5, 1, 2, 90, 180, 360]}],
         "no-self-compare": "error",
         "quotes": ["warn", "single", { "avoidEscape": true }]
     }

@@ -21,4 +21,13 @@ export const initializeDatabase = () =>
     emailInputErrorMessage: strings.emailInputErrorMessage
   });
 
+export const logOutOfDatabase = fireBaseApp =>
+  fireBaseApp
+    .auth()
+    .signOut()
+    .then(() => {
+      console.log('Logged out');
+    })
+    .catch(error => console.log('An error occurred while logging out:', error));
+
 export const getItemsRef = firebaseApp => firebaseApp.database().ref().child('branches');

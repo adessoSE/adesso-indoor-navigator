@@ -2,12 +2,12 @@ import React from 'react';
 import { Text, View } from 'react-native';
 import PropTypes from 'prop-types';
 
-import { localStyles } from '../../localStyles';
+import { generalStyles } from '../../generalStyles';
 
-const DistanceText = ({ destination, distance }) => {
+const DistanceText = ({ destinationName, distance }) => {
   let text = '';
 
-  if (destination !== 'none') {
+  if (destinationName !== 'none') {
     text = distance !== 0 ? `Distance: ${distance} m` : 'Please scan a marker!';
   }
   
@@ -21,7 +21,7 @@ const DistanceText = ({ destination, distance }) => {
         alignItems: 'center'
       }}
     >
-      <Text style={localStyles.buttonText}>
+      <Text style={generalStyles.buttonText}>
         {text}
       </Text>
     </View>
@@ -31,7 +31,7 @@ const DistanceText = ({ destination, distance }) => {
 DistanceText.propTypes = {
   viroAppProps: PropTypes.object,
   distance: PropTypes.number,
-  destination: PropTypes.any
+  destinationName: PropTypes.any
 };
 
 export default DistanceText;

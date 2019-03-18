@@ -1,7 +1,32 @@
 # **A**desso-indoor-navigato**R**
 
+- [**A**desso-indoor-navigato**R**](#adesso-indoor-navigator)
+  - [Known bugs](#known-bugs)
+  - [For adesso employees](#for-adesso-employees)
+  - [Setup](#setup)
+    - [Step 1 - Follow steps 1-4 in the quickstart guide](#step-1---follow-steps-1-4-in-the-quickstart-guide)
+      - [Recommendations](#recommendations)
+    - [Step 2 - Clone & install repository](#step-2---clone--install-repository)
+    - [Step 3 - Edit `.env`](#step-3---edit-env)
+      - [WARNING](#warning)
+    - [Step 4 - Create images for the minimap](#step-4---create-images-for-the-minimap)
+    - [Step 5](#step-5)
+      - [Android](#android)
+      - [iOS](#ios)
+    - [Step 6](#step-6)
+      - [Register](#register)
+    - [Setting POIs](#setting-pois)
+  - [Build and installation](#build-and-installation)
+    - [Android](#android-1)
+    - [iOS](#ios-1)
+  - [Attributions](#attributions)
+
 ## Known bugs
 - White screen after first start of the app: Completely quit and restart the app on your phone without starting a new build
+- Blue indicators don't lead you towards the direction of your target. See #11
+
+## For adesso employees
+Some of the following instructions will require you create certain files. These files can be found [here](https://confluence.adesso.de/pages/viewpage.action?pageId=88609425) but you will need to enter your adesso credentials.
 
 ## Setup
 
@@ -11,6 +36,19 @@
 - Install viroreact cli `npm install -g react-viro-cli`
 - Install and ruby
 - [Mac / Linux only] Install watchman
+
+#### Recommendations
+
+**For Mac users**:
+
+Use rbenv:
+- Install using Homebrew: `$ brew install rbenv`
+- Initiliaze rbenv: `$ rbenv init`
+- Install Ruby (at least 2.2.0): `$ rbenv install 2.3.0`
+- Set Global Ruby installation: `$ rbenv global 2.3.0`
+
+Afterwards install CocoaPods: `$ gem install cocoapods`
+ 
 
 ### Step 2 - Clone & install repository
 ```bash
@@ -24,15 +62,11 @@ Now you need to configure your project to use your own Viro API key and your own
 #### WARNING
 The `.env` is included in the `.gitignore` and will **not** be commited into your git repository. You must keep track of it **on your own**.
 
-### Step 4 - Create two specific JSON files
-For data privacy reasons, we removed two JSON files from the repository. In order for the build to succeed, you will need to at least create these files:
+### Step 4 - Create images for the minimap
+For data privacy reasons, we removed an image of the adesso office in Dortmund from the repository. In order for the build to succeed, you will need to at least create a
+`./js/res/dortmund_4.png`. For ideal results, it should have a width of 550px and a height of 387px.
 
-1. `./js/res/json/floorplan_adesso.json`
-2. `./js/res/json/Javascript2018_Arena.json`
-
-You can fill them with some content similar to their template files (`[...]_template.json`).
-
-**Hint:** You can generate some randomized JSON [here](https://www.json-generator.com/).
+(Can be found in Confluence as linked above)
 
 ### Step 5
 
@@ -55,6 +89,16 @@ For general information, see [https://docs.viromedia.com/docs/starting-a-new-vir
 - Install homebrew
 - Install cocoapods
 - Open .xcworkspace file with Xcode
+
+### Step 6
+
+#### Register
+
+You can register your account [here](https://adesso-indoor-nav-setup.firebaseapp.com/auth/register). You will receive a confirmation E-Mail to your entered address.
+
+### Setting POIs
+
+To add or change positions you have to login first. Afterwards navigate to the Overview tab, select your site and click on edit.
 
 ## Build and installation
 ### Android

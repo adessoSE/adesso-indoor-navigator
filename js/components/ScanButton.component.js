@@ -1,7 +1,13 @@
 import React from 'react';
-import { View, TouchableHighlight, Image } from 'react-native';
-import { localStyles } from '../../localStyles';
+import { View, TouchableHighlight, Image, StyleSheet } from 'react-native';
 import PropTypes from 'prop-types';
+
+const styles = StyleSheet.create({
+  icon: {
+    height: 64,
+    width: 64
+  }
+});
 
 const ScanButton = ({ onPress }) => {
   return (
@@ -16,7 +22,7 @@ const ScanButton = ({ onPress }) => {
     >
       <TouchableHighlight onPress={onPress}>
         <Image
-          style={localStyles.icon}
+          style={styles.icon}
           source={require('../res/barcode.png')}
         />
       </TouchableHighlight>

@@ -1,14 +1,16 @@
 import React from 'react';
-import { Image, View } from 'react-native';
+import { Image, View, StyleSheet } from 'react-native';
 import PropTypes from 'prop-types';
-
-import { localStyles } from '../../localStyles';
 
 let getStyleFromDirection = direction => {
     let style = {
         viewStyle: {
             position: 'absolute',
             alignItems: 'flex-start'
+        },
+        imageStyle: {
+            width: 73,
+            height: 147
         }
     };
 
@@ -17,30 +19,29 @@ let getStyleFromDirection = direction => {
             style.viewStyle.left = '45%';
             // style.viewStyle.right = 0;
             style.viewStyle.top = -15;
-            style.imageStyle = localStyles.arrowtop;
+            style.imageStyle.transform = [{ rotate: "90deg" }];
             break;
         case 'bottom':
             style.viewStyle.left = '45%';
             // style.viewStyle.right = 0;
             style.viewStyle.bottom = 80;
-            style.imageStyle = localStyles.arrowbottom;
+            style.imageStyle.transform = [{ rotate: "-90deg" }];
             break;
         case 'left':
             style.viewStyle.left = 15;
             style.viewStyle.top = '35%';
             // right: 0,
-            style.imageStyle = localStyles.arrowleft;
             break;
         case 'right':
             style.viewStyle.right = 15;
             style.viewStyle.top = '35%';
-            style.imageStyle = localStyles.arrowright;
+            style.imageStyle.transform = [{ rotate: "180deg" }];
             break;
         default:
             break;
     }
 
-    return style;
+    return StyleSheet.create(style);
 };
 
 const Indicator = ({ directions }) => {
@@ -66,7 +67,7 @@ const Indicator = ({ directions }) => {
 };
 
 Indicator.propTypes = {
-  indicator: PropTypes.array,
+  directions: PropTypes.array,
 };
 
 export default Indicator;

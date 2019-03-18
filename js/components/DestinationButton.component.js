@@ -1,11 +1,25 @@
 import React from 'react';
-import { TouchableHighlight, Text, View } from 'react-native';
-
-import { localStyles } from '../../localStyles';
+import { TouchableHighlight, Text, View, StyleSheet } from 'react-native';
+import { generalStyles } from '../../generalStyles';
 import PropTypes from 'prop-types';
 
-const DestinationButton = ({ viroAppProps, onPress }) => {
-  if (viroAppProps.destinationLocation) {
+const styles = StyleSheet.create({
+  buttons: {
+    height: 70,
+    width: 250,
+    paddingTop: 20,
+    paddingBottom: 20,
+    marginTop: 10,
+    marginBottom: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#fff',
+    backgroundColor: '#68a0cf'
+  }
+});
+
+const DestinationButton = ({ destinationLocation, destinationName, onPress }) => {
+  if (destinationLocation) {
     return (
       <View
         style={{
@@ -17,13 +31,13 @@ const DestinationButton = ({ viroAppProps, onPress }) => {
         }}
       >
         <TouchableHighlight
-          style={localStyles.buttons}
+          style={styles.buttons}
           onPress={onPress}
           underlayColor={'#68a0ff'}
         >
-          <Text style={localStyles.buttonText}>
-            {viroAppProps.destination !== 'none'
-              ? `Destination: ${viroAppProps.destination}`
+          <Text style={generalStyles.buttonText}>
+            {destinationName !== 'none'
+              ? `Destination: ${destinationName}`
               : 'Choose Destination'}
           </Text>
         </TouchableHighlight>
@@ -35,7 +49,8 @@ const DestinationButton = ({ viroAppProps, onPress }) => {
 };
 
 DestinationButton.propTypes = {
-  viroAppProps: PropTypes.object,
+  destinationLocation: PropTypes.any,
+  destinationName: PropTypes.any,
   onPress: PropTypes.func
 };
 
