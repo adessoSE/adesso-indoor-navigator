@@ -10,7 +10,7 @@ const DistanceText = ({ destinationName, distance }) => {
   if (destinationName !== 'none') {
     text = distance !== 0 ? `Distance: ${distance} m` : 'Please scan a marker!';
   }
-  
+
   return (
     <View
       style={{

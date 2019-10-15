@@ -1,0 +1,86 @@
+{
+    "items": [
+        {
+            "key": "-LbDquYUkxwive9KvIG4",
+            "markers": [
+                {
+                    "coordinator": {
+                        "latitude": 48.654378,
+                        "longitude": 9.445217
+                    },
+                    "floor": 1,
+                    "offset": {
+                        "position": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0
+                        },
+                        "rotation": {
+                            "x": 0,
+                            "y": 0,
+                            "z": 0
+                        }
+                    },
+                    "src": "markers/14sd0ssmohu",
+                    "url": "_marker_small.png",
+                    "width": 0.215
+                }
+            ],
+            "name": "Stuttgart",
+            "pois": [
+                {
+                    "position": {
+                        "x": 4.5,
+                        "y": -1,
+                        "z": -1
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "title": "Raum 1"
+                },
+                {
+                    "position": {
+                        "x": 9,
+                        "y": -23,
+                        "z": 1
+                    },
+                    "scale": {
+                        "x": 3,
+                        "y": 3,
+                        "z": 3
+                    },
+                    "title": "Tür"
+                },
+                {
+                    "position": {
+                        "x": 17,
+                        "y": 17,
+                        "z": -0.02
+                    },
+                    "scale": {
+                        "x": 3,
+                        "y": 3,
+                        "z": 3
+                    },
+                    "title": "Test"
+                },
+                {
+                    "position": {
+                        "x": 0,
+                        "y": 0,
+                        "z": 0
+                    },
+                    "scale": {
+                        "x": 1,
+                        "y": 1,
+                        "z": 1
+                    },
+                    "title": "positionDebugger"
+                }
+            ]
+        }
+    ]
+}

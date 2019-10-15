@@ -50,7 +50,8 @@ var Navigation = createReactClass({
         onMarkerDetected: PropTypes.func,
         setNewCameraPosition: PropTypes.func,
         setDistanceAndIndicatorDirections: PropTypes.func,
-        setNewMarkerPosition: PropTypes.func
+        setNewMarkerPosition: PropTypes.func,
+        changeHitPos: PropTypes.func
       }
     }
   }),
@@ -70,6 +71,7 @@ var Navigation = createReactClass({
       this.props.arSceneNavigator.viroAppProps.markers !== null
     ) {
       markers = this.props.arSceneNavigator.viroAppProps.markers;
+      console.log("Creating Targets");
       createTargets()
         .then(this.setState({ loadMarker: true }))
         .catch(err => console.log(err));
@@ -136,10 +138,11 @@ var Navigation = createReactClass({
     return (
       <ViroARScene
         ref='arscene'
-        onTrackingUpdated={this._trackingUpdated}
+        numberOfTrackedImages={0}
         onCameraTransformUpdate={this._getCamera}
+        onTrackingUpdated={this._trackingUpdated}
         displayPointCloud={
-          this.props.arSceneNavigator.viroAppProps.showPointCloud
+          this.props.arSceneNavigator.viroAppProps.showPointCloud || this.refs["positionDebugger"]
         }
       >
         <ViroAmbientLight color='#ffffff' intensity={200} />
@@ -149,7 +152,7 @@ var Navigation = createReactClass({
           <ViroNode>{this._createARImageMarker()}</ViroNode>
         ) : null}
         {/* End ImageMarker */}
-        
+
         {this.createLightsAndGround()}
       </ViroARScene>
     );
@@ -160,7 +163,7 @@ var Navigation = createReactClass({
   _createARImageMarker() {
     return markers.map(marker => {
       let markerRotation = [marker.offset.rotation.x, marker.offset.rotation.y, marker.offset.rotation.z];
-    
+
       return (
         <ViroARImageMarker
           target={marker.id}
@@ -231,6 +234,12 @@ var Navigation = createReactClass({
           resources={[require('./res/arrow/materials.mtl')]}
           rotation={[0, 90, 90]}
           type='OBJ'
+          onDrag={this.refs["positionDebugger"] ? () => {
+            /* Make Debugger Model Moveable and Update its Position */
+            this.refs["positionDebugger"].getTransformAsync().then(transform => {
+              this.props.arSceneNavigator.viroAppProps.changeHitPos(transform.position);
+            })
+          }: undefined}
           ref={name}
         />
       </ViroNode>
@@ -300,6 +309,7 @@ var Navigation = createReactClass({
 
   _onModelLoad() {
     setTimeout(() => {
+      console.log("On Model load");
       this.setState({});
     }, 3000);
   },
@@ -367,7 +377,7 @@ var Navigation = createReactClass({
           result.push('right');
         }
       }
-      
+
       /* Top or Bottom */
       if (vec[1] < -0.3) {
         result.push('top');
@@ -396,6 +406,11 @@ async function createTargets() {
       physicalWidth: marker.width,
       orientation: 'Up'
     };
+
+    if(marker.url[0] === "_"){
+      console.log("Using offline marker");
+      targetObject[targetname].source = require(`./res/marker_small.png`);
+    }
   });
 
   /* Create Targets from object */

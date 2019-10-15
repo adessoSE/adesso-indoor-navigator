@@ -60,7 +60,7 @@ export default class MapScene extends Component {
 
   componentDidMount() {
     let newFeaturesArray = [];
-
+    console.log("Map did mount");
     if (this.state.featuresArray.length === 0) {
       this.getFeatures().then(res => {
         newFeaturesArray.push(res);
@@ -71,7 +71,7 @@ export default class MapScene extends Component {
 
   render() {
     const currOffice = adessoOffices.dortmund;
-
+/* //TODO: Mölgich rechnung aufwending */
     let usersPositionInMinimap = this.calcPixelInMapFromPositionRelativeToMarker({
       x: this.props.position[0],
       y: -this.props.position[2]
@@ -117,7 +117,7 @@ export default class MapScene extends Component {
 
   calcPixelInMapFromPositionRelativeToMarker(positionRelativeToMarker, marker) {
     const office = adessoOffices.dortmund;
-    
+
     const widthInMeters = office.width; // officeCorners.topLeft.distanceTo(officeCorners.topRight);
     const scaleFromMetersToPixels = office.mapDimensions.width / widthInMeters;
 
@@ -128,7 +128,7 @@ export default class MapScene extends Component {
         y: marker.offset.position.z
       })
       .scaleBy(scaleFromMetersToPixels);
-    
+
     return coordinateAsPixel;
   }
 

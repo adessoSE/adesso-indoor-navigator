@@ -17,7 +17,8 @@ const ScanButton = ({ onPress }) => {
         left: 15,
         right: 0,
         top: 15,
-        alignItems: 'flex-start'
+        alignItems: 'flex-start',
+        zIndex: 3
       }}
     >
       <TouchableHighlight onPress={onPress}>

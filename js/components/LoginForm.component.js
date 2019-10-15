@@ -1,9 +1,38 @@
 import React from 'react';
-import { Button, View } from 'react-native';
-import t from 'tcomb-form-native';
+import {
+  View,
+  Image,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity
+} from 'react-native';
 import PropTypes from 'prop-types';
 
-import strings from '../../i18n/strings';
+const style = StyleSheet.create({
+  logo: {
+    width: '100%',
+    height: 90,
+    resizeMode: 'contain'
+  },
+  input: {
+    height: 40,
+    borderBottomWidth: 1,
+    borderColor: 'rgb(204, 204, 204)'
+  },
+  button: {
+    alignItems: 'center',
+    backgroundColor: '#0275d8',
+    marginTop: 10,
+    color: 'white',
+    padding: 10
+  },
+  clickableText: {
+    marginTop: 25,
+    color: 'blue',
+    textDecorationLine: 'underline'
+  }
+});
 
 class LoginForm extends React.Component {
   constructor(props) {
@@ -12,69 +41,19 @@ class LoginForm extends React.Component {
       isSignedIn: false,
       userData: {
         email: '',
-        password: ''
+        password: '',
+        submitted: false
       },
+      email: '',
+      password: ''
     };
   }
-  
-  Form = t.form.Form;
-
-  User = t.struct({
-    email: t.String,
-    password: t.String
-  });
-
-  formStyles = {
-    ...this.Form.stylesheet,
-    formGroup: {
-      normal: {
-        marginBottom: 10
-      }
-    },
-    controlLabel: {
-      normal: {
-        color: 'blue',
-        fontSize: 18,
-        marginBottom: 7,
-        fontWeight: '600'
-      },
-      // the style applied when a validation error occours
-      error: {
-        color: 'red',
-        fontSize: 18,
-        marginBottom: 7,
-        fontWeight: '600'
-      }
-    }
-  };
-
-  options = {
-    fields: {
-      email: {
-        error: strings.firebase.emailInputErrorMessage,
-        autoCorrect: false,
-        autoCapitalize: 'none',
-        autoFocus: true,
-        textContentType: 'username'
-      },
-      password: {
-        error: strings.firebase.passwordErrorMessage,
-        password: true,
-        secureTextEntry: true,
-        textContentType: 'password'
-      }
-    },
-    stylesheet: this.formStyles
-  };
 
   handleSubmit = () => {
-    const value = this._form.getValue();
-    /* Set email and password */
-    if (value) {
-      this.setState(
-        {userData: value},
-        () => this.login()
-      );
+    const { email, password } = this.state;
+
+    if (email && password) {
+      this.login();
     }
   };
 
@@ -82,10 +61,7 @@ class LoginForm extends React.Component {
     /* Firebase Authentication */
     this.props.firebaseApp
       .auth()
-      .signInWithEmailAndPassword(
-        this.state.userData.email,
-        this.state.userData.password
-      )
+      .signInWithEmailAndPassword(this.state.email, this.state.password)
       .then(credential => {
         // If login is successful, firebase will trigger an event which is caught in App.js:150
         if (credential) {
@@ -99,24 +75,44 @@ class LoginForm extends React.Component {
           isSignedIn: false
         }) */
       });
-  }
-  
+  };
+
   render() {
     return (
       <View>
-        <this.Form
-          ref={c => (this._form = c)} // assign a ref
-          type={this.User}
-          options={this.options}
+        <Image
+          style={style.logo}
+          source={require('../res/Adesso_AG_logo.png')}
         />
-        <Button title='Sign in' onPress={this.handleSubmit} />
+        <TextInput
+          placeholder='E-Mail'
+          onChangeText={email => this.setState({ email })}
+          style={style.input}
+          autoFocus={true}
+          textContentType='emailAddress'
+        />
+        <TextInput
+          name='password'
+          placeholder='Password'
+          onChangeText={password => this.setState({ password })}
+          style={style.input}
+          textContentType='password'
+          secureTextEntry={true}
+        />
+        <TouchableOpacity onPress={this.handleSubmit} style={style.button}>
+          <Text style={{ color: 'white' }}>Login</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={this.props.handleOfflineMode}>
+          <Text style={style.clickableText}>Offline Mode</Text>
+        </TouchableOpacity>
       </View>
     );
   }
 }
 
 LoginForm.propTypes = {
-  firebaseApp: PropTypes.object
+  firebaseApp: PropTypes.object,
+  handleOfflineMode: PropTypes.func
 };
 
 export default LoginForm;

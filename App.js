@@ -5,6 +5,7 @@ import { ViroARSceneNavigator } from 'react-viro';
 import { VIRO_API_KEY, VIRO_FEATURES_MAP } from 'react-native-dotenv';
 import ModalFilterPicker from './js/components/ModalFilterPicker.component';
 import ScanButton from './js/components/ScanButton.component';
+import TogglePostionMode from './js/components/TogglePostionMode.component'
 import DestinationButton from './js/components/DestinationButton.component';
 import DistanceText from './js/components/DistanceText.component';
 import Indicator from './js/components/Indicator.component';
@@ -14,10 +15,9 @@ import LoginForm from './js/components/LoginForm.component';
 import MapScene from './js/MapScene';
 import * as FirebaseTools from './js/components/FirebaseTools';
 
-// import MapScene from './js/MapScene';
-
 const USEMAP = true;
 const InitialARScene = require('./js/Navigation');
+const OfflineData = require('./js/offlineData.json');
 
 const defaultDestinationName = 'none';
 const defaultPauseUpdates = false;
@@ -53,11 +53,14 @@ export default class ViroSample extends Component {
       userData: null,
       markersById: null,
       currentMarker: null,
+      offlineMode: false,
 
       // viroAppProps are used partially to pass information along to Viro React, but the object is also passed along
       // from Viro to other components, such as Navigation.js. In other words, this object is also used to pass
       // data to components, other than those from Viro React.
       viroAppProps: {
+        positionMode: false,
+        hitpos: null,
         featuresmap: VIRO_FEATURES_MAP,
         cameraPosition: [0, 0, 0],
         destinationName: defaultDestinationName,
@@ -76,6 +79,7 @@ export default class ViroSample extends Component {
         onMarkerDetected: this.onMarkerDetected,
         setNewCameraPosition: this.setNewCameraPosition,
         setNewMarkerPosition: this.setNewMarkerPosition,
+        changeHitPos: this.changeHitPos
       }
     };
   }
@@ -93,15 +97,16 @@ export default class ViroSample extends Component {
           isSignedIn: true,
           modalVisible: true
         });
+        if (!this.state.offlineMode) {
+          /* Get Data */
+          let itemsRef = FirebaseTools.getItemsRef(this.state.firebaseApp);
 
-        /* Get Data */
-        let itemsRef = FirebaseTools.getItemsRef(this.state.firebaseApp);
-
-        itemsRef.on('value', snapshot => {
-          let data = snapshot.val();
-          let items = Object.values(data);
-          this.setViroAppProps({ items: items }, this.getMarkers);
-        });
+          itemsRef.on('value', snapshot => {
+            let data = snapshot.val();
+            let items = Object.values(data);
+            this.setViroAppProps({ items: items }, this.getMarkers);
+          });
+        }
       }
     });
   }
@@ -134,7 +139,7 @@ export default class ViroSample extends Component {
             nr: index,
             id: markerId
           });
-          
+
 
           markersById[markerId] = {
             ...marker,
@@ -143,7 +148,7 @@ export default class ViroSample extends Component {
         });
       }
     });
-
+    console.log("Set Markers and IDs");
     this.setState({ markersById });
     this.setViroAppProps({ markers });
   }
@@ -153,7 +158,8 @@ export default class ViroSample extends Component {
    * @param [object] newProps - Object containing the properties to be set
    * @param [function] callback
    */
-  setViroAppProps = (newProps, callback = () => {}) => {
+  setViroAppProps = (newProps, callback = () => { }) => {
+    /* console.log("Set new ViroProps: ", newProps); */
     this.setState({
       viroAppProps: {
         ...this.state.viroAppProps,
@@ -163,18 +169,18 @@ export default class ViroSample extends Component {
   }
 
   render() {
-    const { isSignedIn } = this.state;
-    
+    const { isSignedIn, offlineMode } = this.state;
+
     return (
       <React.Fragment>
         {/* MiniMap and ViroScene */}
-        {/* Only Render if the User is signed in*/}
-        {isSignedIn ? (
+        {/* Only Render if the User is signed in or in Offline Mode*/}
+        {isSignedIn || offlineMode ? (
           <View style={style.outer}>
 
             {this.state.modalVisible ? (
               <ModalFilterPicker
-                onCancel={this.onModalClose }
+                onCancel={this.onModalClose}
                 onDestinationUpdate={this.onDestinationUpdate}
                 locations={this.state.locations}
                 options={this.state.options}
@@ -189,8 +195,18 @@ export default class ViroSample extends Component {
             />
 
             <ScanButton
-              onPress={() => this.setViroAppProps({pauseUpdates: false})}
+              onPress={() => this.setViroAppProps({ pauseUpdates: false })}
             />
+
+           {this.state.viroAppProps.hitpos ? ( <TogglePostionMode coord={this.state.viroAppProps.hitpos} onPress={() => {
+              if (!this.state.viroAppProps.positionMode) {
+                this.setViroAppProps({ positionMode: true })
+              }else{
+                this.setViroAppProps({ positionMode: false })
+              }
+            }
+            }
+            />): null}
 
             <DestinationButton
               destinationLocation={this.state.viroAppProps.destinationLocation}
@@ -203,7 +219,7 @@ export default class ViroSample extends Component {
               distance={this.state.distance}
             />
 
-            {USEMAP && this.state.currentMarker ? (
+            {(USEMAP && this.state.currentMarker) && (!this.state.offlineMode) ? (
               <MapScene
                 featuresMap={this.state.viroAppProps.featuresmap}
                 currentMarker={this.state.currentMarker}
@@ -218,15 +234,15 @@ export default class ViroSample extends Component {
             <DebugCamera />
           </View>
         ) : (
-          // Login and info / start screen after login
-          <View style={style.loginContainer}>
-            {isSignedIn === false ?
-              <LoginFailedScreen /> :
-              (<View>
-                <LoginForm firebaseApp={this.state.firebaseApp} />
-              </View>)}
-          </View>
-        )}
+            // Login and info / start screen after login
+            <View style={style.loginContainer}>
+              {isSignedIn === false ?
+                <LoginFailedScreen /> :
+                (<View>
+                  <LoginForm firebaseApp={this.state.firebaseApp} handleOfflineMode={this.handleOfflineMode} />
+                </View>)}
+            </View>
+          )}
       </React.Fragment>
     );
   }
@@ -245,6 +261,19 @@ export default class ViroSample extends Component {
       modalVisible: false
     });
   }
+
+  handleOfflineMode = () => {
+    const { offlineMode } = this.state;
+    console.log("Toogle offline mode", offlineMode);
+    if (!offlineMode) {
+      console.log("Using Offline Data:", OfflineData);
+      this.setViroAppProps({ items: OfflineData.items }, this.getMarkers);
+      this.setState({
+        offlineMode: true,
+        modalVisible: true
+      });
+    }
+  };
 
   _getListDataForLocation = locationName => {
     /*  get locaiton list Data after scanned Marker (known location)  */
@@ -288,7 +317,7 @@ export default class ViroSample extends Component {
     const newpos = newCameraPosition.reduce(addValues);
     const oldpos = this.state.viroAppProps.cameraPosition.reduce(addValues);
     const diff = newpos - oldpos;
-        
+
     /* set new Position if there is a significant difference */
     if (Math.abs(diff) < 0.1) {
       this.setViroAppProps({
@@ -332,10 +361,17 @@ export default class ViroSample extends Component {
         pauseUpdates: true,
         showPointCloud: false
       });
+      console.log(this.state);
     } else if (!this.state.viroAppProps.pauseUpdates) {
       console.log('Same marker found as before, will stop looking for markers');
       this.setViroAppProps({ pauseUpdates: true });
     }
+  }
+
+  changeHitPos = newhitpos => {
+    this.setViroAppProps({
+      hitpos: newhitpos
+    });
   }
 }
 
